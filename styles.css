@@ -934,7 +934,7 @@ progress::-moz-progress-bar {
     display: list-item;
   }
 
-  .step-index:not([open]) .index-content {
+  .step-index details:not([open]) .index-content {
     display: none;
   }
 
