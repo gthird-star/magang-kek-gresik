@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#dff3fa">
+  <meta name="description" content="Website belajar peraturan KEK Gresik dari dokumen sumber resmi.">
+  <title>Belajar Peraturan KEK Gresik</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#reader">Langsung ke materi</a>
+  <header class="site-header">
+    <a class="brand" href="./" aria-label="Beranda Belajar KEK Gresik">
+      <span class="brand-index" aria-hidden="true">01</span>
+      <span>BUKU BELAJAR <strong>KEK GRESIK</strong></span>
+    </a>
+    <nav class="top-nav" aria-label="Navigasi utama">
+      <a href="#article-controls">Pilih jalur</a>
+      <a href="#progress-summary">Progres belajar</a>
+      <a href="#source-notice">Tentang sumber</a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="intro" aria-labelledby="page-title">
+      <div class="intro-copy">
+        <h1 id="page-title">Pahami aturan KEK, selangkah demi selangkah.</h1>
+        <p class="intro-lead">Mulai dari gambaran umum semua pasal. Setelah itu, pilih jalur pendalaman yang sesuai dengan divisi kamu.</p>
+      </div>
+      <div class="progress-summary" id="progress-summary">
+        <div class="progress-heading">
+          <span>PROGRES BELAJAR</span>
+          <strong id="progress-label">Memuat pasal...</strong>
+        </div>
+        <progress id="progress-bar" value="0" max="1">0%</progress>
+        <p id="progress-detail">Progres tersimpan di browser ini.</p>
+      </div>
+    </section>
+
+    <p class="status-message" id="app-status" role="status" aria-live="polite"></p>
+
+    <section class="control-strip" id="article-controls" aria-label="Cari dan pilih materi">
+      <label class="control-field">
+        <span>Peraturan</span>
+        <select id="regulation-filter">
+          <option value="all">Semua peraturan</option>
+        </select>
+      </label>
+      <label class="control-field">
+        <span>Jalur belajar</span>
+        <select id="track-filter">
+          <option value="all">Gambaran umum</option>
+          <option value="waspal">Waspal · draf</option>
+        </select>
+      </label>
+      <label class="control-field search-field">
+        <span>Cari pasal atau topik</span>
+        <input id="article-search" type="search" placeholder="Contoh: pengawasan, Pasal 59" autocomplete="off">
+      </label>
+      <button class="button button-outline" id="build-track-toggle" type="button" aria-expanded="false" aria-controls="track-builder">Buat jalur divisi</button>
+    </section>
+    <p class="route-note" id="route-note"></p>
+
+    <section class="track-builder" id="track-builder" hidden aria-labelledby="track-builder-title">
+      <div class="builder-heading">
+        <div>
+          <h2 id="track-builder-title">Susun pasal untuk divisi kamu.</h2>
+        </div>
+        <button class="text-button" id="build-track-close" type="button">Tutup</button>
+      </div>
+      <form id="track-form">
+        <div class="builder-controls">
+          <label class="control-field">
+            <span>Nama jalur</span>
+            <input id="track-name" name="trackName" maxlength="50" required placeholder="Misalnya: Divisi operasional">
+          </label>
+          <label class="control-field">
+            <span>Cari untuk dipilih</span>
+            <input id="track-search" type="search" placeholder="Cari pasal, bab, atau kata kunci">
+          </label>
+        </div>
+        <p class="builder-help">Pilih pasal yang ingin dipelajari. Jalur yang dibuat hanya tersimpan di perangkat ini.</p>
+        <div class="track-options" id="track-options" tabindex="-1" aria-label="Daftar pasal untuk jalur divisi"></div>
+        <div class="builder-footer">
+          <span id="track-selection-count">Belum ada pasal dipilih.</span>
+          <button class="button button-primary" type="submit">Simpan jalur</button>
+        </div>
+      </form>
+    </section>
+
+    <div class="workspace">
+      <aside class="step-index" aria-label="Daftar isi pasal">
+        <details id="index-details" open>
+          <summary>DAFTAR LANGKAH <span id="visible-count"></span></summary>
+          <div class="index-content">
+            <p class="index-note">Pilih peraturan, bab, atau pasal untuk mulai membaca.</p>
+            <div class="article-list" id="article-list"></div>
+          </div>
+        </details>
+      </aside>
+
+      <section class="reader" id="reader" tabindex="-1" aria-label="Materi belajar">
+        <div class="reader-empty">
+          <h2>Menyiapkan daftar pasal.</h2>
+          <p>Dokumen asli tetap tersedia dari setiap materi.</p>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer" id="source-notice">
+    <div class="footer-mark" aria-hidden="true">01—03</div>
+    <div>
+      <h2>PDF asli adalah rujukan utama.</h2>
+      <p>Teks di website diekstrak dari PDF dan dapat mengandung kesalahan ekstraksi. Cocokkan dengan dokumen sumber jika ada redaksi atau penomoran yang janggal. Materi ini untuk belajar, bukan nasihat hukum.</p>
+    </div>
+    <a href="#main">Kembali ke atas</a>
+  </footer>
+</body>
+</html>
