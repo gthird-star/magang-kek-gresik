@@ -71,6 +71,10 @@ typography:
     letterSpacing: "0.1em"
 rounded:
   square: "0"
+  reader-card: "8px"
+  provision-card: "6px"
+  term-badge: "4px"
+  reference-pill: "999px"
 spacing:
   control-gap: "14px"
   field-padding: "9px 11px"
@@ -148,11 +152,11 @@ The article body is kept to a 70ch measure. Tight control groups use 10–14px g
 
 ## Elevation & Depth
 
-There are no shadows. Depth comes from the contrast between the sky-blue masthead, pale page ground, white reading surface, and thin borders. Keep the surface hierarchy flat rather than adding floating cards or decorative elevation.
+Most of the guide stays flat. The article reader and numbered provision cards use a restrained, soft shadow to separate their reading surfaces from the page; keep other components defined by color and thin borders.
 
 ## Shapes
 
-The guide uses square corners (`border-radius: 0`) and thin, purposeful outlines. Number chips, source callouts, and controls use the same crisp geometry; avoid rounded cards and pill-shaped containers.
+Buttons and fields keep square corners (`border-radius: 0`) and thin, purposeful outlines. The article reader, provision cards, index, and control strip use modest 6–8px corners; avoid pill-shaped containers.
 
 ## Components
 
@@ -168,8 +172,12 @@ The guide uses square corners (`border-radius: 0`) and thin, purposeful outlines
 
 ### Cards / Containers
 - **Background:** White for the lesson body; sky blue for the lesson heading and control strip.
-- **Shadow Strategy:** None; separate surfaces with borders.
+- **Shadow Strategy:** Restrained soft shadows on the lesson, control strip, and provision cards; other surfaces remain flat.
 - **Border:** 1px blue or neutral line, depending on context.
+- **Provision text:** Split numbered clauses, ayat, and lettered subpoints into softly tinted rows with fixed-width number columns and clear spacing. Pasal 1 definitions show a bold term label.
+- **Reading mode:** Keep the structured-points and full extracted-text views adjacent; the latter remains available for checking source wording.
+- **Term labels:** Definition names use compact, softly tinted badges.
+- **References:** Known article and ayat references use keyboard-accessible pill chips that reveal the cited text and link to its source PDF page.
 
 ### Inputs / Fields
 - **Style:** White surface, square corners, 1px dark-line border, 43px minimum height.

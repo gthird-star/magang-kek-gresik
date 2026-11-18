@@ -42,6 +42,7 @@ const elements = {
 let regulations = [];
 let articles = [];
 let currentArticle = null;
+let articleViewMode = "structured";
 let builderSelection = new Set();
 let storageNotice = "";
 let storageWritable = true;
@@ -265,6 +266,258 @@ function makePdfUrl(regulation, page) {
   return `${encodeURI(regulation.pdf)}#page=${Number(page) || 1}`;
 }
 
+function parseStructuredText(text) {
+  const source = String(text);
+  const numberedMarkers = [];
+  const numberedPattern = /(^|\n)(\d+)\.[ \t]+/g;
+  let match;
+
+  while ((match = numberedPattern.exec(source))) {
+    const start = match.index + match[1].length;
+    numberedMarkers.push({
+      start,
+      contentStart: numberedPattern.lastIndex,
+      number: match[2],
+      type: "number"
+    });
+  }
+
+  const markers = numberedMarkers.length ? numberedMarkers : [];
+  if (!markers.length) {
+    // PDF extraction can misread a closing parenthesis as "1", for example "(21 ".
+    const paragraphPattern = /\((\d{1,2})\)[ \t]*|\((\d)1(?=[ \t])/g;
+    while ((match = paragraphPattern.exec(source))) {
+      const prefix = source.slice(0, match.index);
+      const trimmedPrefix = prefix.trimEnd();
+      const startsParagraph = !trimmedPrefix
+        || prefix.endsWith("\n")
+        || /[.!?:;]$/.test(trimmedPrefix);
+      if (startsParagraph) {
+        markers.push({
+          start: match.index,
+          contentStart: paragraphPattern.lastIndex,
+          number: match[1] || match[2],
+          type: "paragraph"
+        });
+      }
+    }
+  }
+
+  if (!markers.length) return { introduction: source, points: [] };
+
+  return {
+    introduction: source.slice(0, markers[0].start).trimEnd(),
+    points: markers.map((marker, index) => ({
+      ...marker,
+      text: source.slice(marker.contentStart, markers[index + 1]?.start ?? source.length).trim()
+    }))
+  };
+}
+
+function isDuplicateNumberedStub(points, index) {
+  const point = points[index];
+  return point.type === "number"
+    && /^[^.]{1,32}(?:\s*\.)+\s*$/.test(point.text)
+    && points.slice(index + 1, index + 3).some((following) =>
+      following.type === "number" && following.number === point.number
+    );
+}
+
+function parseLetteredPoints(text) {
+  const source = String(text);
+  const markers = [];
+  const pattern = /(^|\n|[;:][ \t]+)([a-z])\.[ \t]+/g;
+  let match;
+
+  while ((match = pattern.exec(source))) {
+    const start = match.index + match[1].length;
+    markers.push({
+      start,
+      contentStart: pattern.lastIndex,
+      label: `${match[2]}.`
+    });
+  }
+
+  const introduction = markers.length ? source.slice(0, markers[0].start).trim() : "";
+  if (!markers.length || (markers.length === 1 && !/[:;]$/.test(introduction))) return null;
+
+  return {
+    introduction,
+    points: markers.map((marker, index) => ({
+      ...marker,
+      text: source.slice(marker.contentStart, markers[index + 1]?.start ?? source.length).trim()
+    }))
+  };
+}
+
+function definitionLabel(text, article) {
+  if (article.number !== "Pasal 1" || !/KETENTUAN UMUM/i.test(article.chapter || "")) {
+    return null;
+  }
+
+  const match = text.match(/^(.+?)\s+adalah\s+([\s\S]*)$/i);
+  if (!match) return null;
+
+  const alias = match[1].match(/^(.*?)\s+yang selanjutnya (?:disingkat|disebut)\s+(.+)$/i);
+  return {
+    label: alias ? `${alias[1]} (${alias[2]})` : match[1],
+    text: `adalah ${match[2]}`
+  };
+}
+
+function renderLetteredGroup(marker, list, article) {
+  const heading = list.introduction
+    ? `<p class="official-text">${renderTextWithReferences(list.introduction, article)}</p>`
+    : "";
+  return `
+    <div class="provision-group">
+      ${marker || heading ? `
+        <div class="provision-group-heading ${marker ? "" : "provision-group-heading-plain"}">
+          ${marker ? `<span class="provision-number">${escapeHtml(marker)}</span>` : ""}
+          ${heading}
+        </div>
+      ` : ""}
+      <div class="provision-sublist">
+        ${list.points.map((point) => `
+          <div class="provision-subpoint">
+            <span class="provision-number">${escapeHtml(point.label)}</span>
+            <p class="official-text">${renderTextWithReferences(point.text, article)}</p>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function renderTextWithReferences(text, article) {
+  const source = String(text);
+  const referencePattern = /Pasal\s+(\d+)|ayat\s+\((\d+)\)/gi;
+  const paragraphNumbers = new Set(
+    parseStructuredText(article.text).points
+      .filter((point) => point.type === "paragraph")
+      .map((point) => point.number)
+  );
+  let output = "";
+  let lastIndex = 0;
+  let match;
+
+  while ((match = referencePattern.exec(source))) {
+    output += escapeHtml(source.slice(lastIndex, match.index));
+    const label = match[0];
+    if (match[1]) {
+      const target = articles.find((item) =>
+        item.regulationId === article.regulationId && item.number === `Pasal ${match[1]}`
+      );
+      output += target
+        ? `<button class="reference-chip" type="button" data-reference-kind="article" data-reference-key="${escapeHtml(articleKey(target))}" aria-controls="reference-preview" aria-expanded="false" aria-label="Intip isi ${escapeHtml(label)}">${escapeHtml(label)}</button>`
+        : `<mark class="reference-highlight">${escapeHtml(label)}</mark>`;
+    } else {
+      output += paragraphNumbers.has(match[2])
+        ? `<button class="reference-chip" type="button" data-reference-kind="paragraph" data-reference-number="${escapeHtml(match[2])}" aria-controls="reference-preview" aria-expanded="false" aria-label="Intip isi ayat (${escapeHtml(match[2])})">${escapeHtml(label)}</button>`
+        : `<mark class="reference-highlight">${escapeHtml(label)}</mark>`;
+    }
+    lastIndex = referencePattern.lastIndex;
+  }
+
+  output += escapeHtml(source.slice(lastIndex));
+  return output;
+}
+
+function renderOfficialText(text, article, mode = articleViewMode) {
+  if (mode === "original") {
+    return `<p class="official-text official-original">${renderTextWithReferences(text, article)}</p>`;
+  }
+
+  const { introduction, points } = parseStructuredText(text);
+  if (!points.length) {
+    const lettered = parseLetteredPoints(text);
+    if (lettered) {
+      return `<div class="provision-list">${renderLetteredGroup("", lettered, article)}</div>`;
+    }
+    return `<p class="official-text">${renderTextWithReferences(text, article)}</p>`;
+  }
+
+  const definitionArticle = article.number === "Pasal 1"
+    && /KETENTUAN UMUM/i.test(article.chapter || "");
+  const visiblePoints = points.filter((point, index) => !isDuplicateNumberedStub(points, index));
+  const cards = visiblePoints.map((point) => {
+    const definition = definitionArticle ? definitionLabel(point.text, article) : null;
+    const lettered = definition ? null : parseLetteredPoints(point.text);
+    if (lettered) {
+      const marker = point.type === "number" ? `${point.number}.` : `(${point.number})`;
+      return renderLetteredGroup(marker, lettered, article);
+    }
+
+    const body = definition ? definition.text : point.text;
+    return `
+      <div class="provision-card">
+        <span class="provision-number">${escapeHtml(point.type === "number" ? `${point.number}.` : `(${point.number})`)}</span>
+        <div class="provision-content">
+          ${definition ? `<strong class="definition-term">${escapeHtml(definition.label)}</strong>` : ""}
+          <p class="official-text">${renderTextWithReferences(body, article)}</p>
+        </div>
+      </div>
+    `;
+  });
+
+  return `
+    ${introduction.trim() ? `<p class="official-text provision-intro">${renderTextWithReferences(introduction, article)}</p>` : ""}
+    <div class="provision-list">${cards.join("")}</div>
+  `;
+}
+
+function closeReferencePreview() {
+  const preview = elements.reader.querySelector("#reference-preview");
+  if (!preview) return;
+  preview.hidden = true;
+  preview.replaceChildren();
+  elements.reader.querySelectorAll(".reference-chip[aria-expanded='true']").forEach((button) => {
+    button.setAttribute("aria-expanded", "false");
+  });
+}
+
+function toggleReferencePreview(button) {
+  const preview = elements.reader.querySelector("#reference-preview");
+  if (!preview) return;
+
+  const shouldClose = button.getAttribute("aria-expanded") === "true";
+  closeReferencePreview();
+  if (shouldClose) return;
+
+  let title = "";
+  let text = "";
+  let regulation = getRegulation(currentArticle);
+  let page = currentArticle.page;
+  if (button.dataset.referenceKind === "article") {
+    const target = articles.find((article) => articleKey(article) === button.dataset.referenceKey);
+    if (!target) return;
+    title = target.number;
+    text = target.text;
+    regulation = getRegulation(target);
+    page = target.page;
+  } else {
+    const paragraph = parseStructuredText(currentArticle.text).points.find((point) =>
+      point.type === "paragraph" && point.number === button.dataset.referenceNumber
+    );
+    if (!paragraph) return;
+    title = `Ayat (${paragraph.number})`;
+    text = paragraph.text;
+  }
+
+  button.setAttribute("aria-expanded", "true");
+  preview.innerHTML = `
+    <div class="reference-preview-heading">
+      <h4>Intip ${escapeHtml(title)}</h4>
+      <button class="text-button" id="reference-preview-close" type="button">Tutup</button>
+    </div>
+    <div class="reference-preview-body">
+      <p class="official-text">${escapeHtml(text)}</p>
+    </div>
+    <a href="${escapeHtml(makePdfUrl(regulation, page))}" target="_blank" rel="noopener">Buka ${escapeHtml(title)} di PDF asli</a>
+  `;
+  preview.hidden = false;
+}
+
 function renderReader() {
   const visible = getVisibleArticles();
   if (!currentArticle || !visible.some((article) => articleKey(article) === articleKey(currentArticle))) {
@@ -312,8 +565,14 @@ function renderReader() {
         <section aria-labelledby="official-title">
           <div class="official-heading">
             <h3 id="official-title">Teks pasal</h3>
+            <div class="reading-mode" role="group" aria-label="Mode baca">
+              <button type="button" data-reading-mode="structured" aria-pressed="${articleViewMode === "structured"}">Poin terstruktur</button>
+              <button type="button" data-reading-mode="original" aria-pressed="${articleViewMode === "original"}">Teks utuh PDF</button>
+            </div>
           </div>
-          <p class="official-text">${fullArticle}</p>
+          <p class="reading-mode-note">${articleViewMode === "structured" ? "Poin disusun dari teks sumber; fragmen duplikat yang terpotong disembunyikan." : "Teks mengikuti hasil ekstraksi PDF. Cocokkan dengan PDF asli bila redaksi terlihat janggal."}</p>
+          ${renderOfficialText(currentArticle.text, currentArticle)}
+          <div class="reference-preview" id="reference-preview" hidden aria-live="polite"></div>
         </section>
         ${hasExplanation ? `
           <details class="explanation">
@@ -451,6 +710,30 @@ function handleArticleAction(event) {
   const target = event.target;
   if (!(target instanceof HTMLElement)) return;
 
+  const readingModeButton = target.closest("[data-reading-mode]");
+  if (readingModeButton) {
+    const nextMode = readingModeButton.dataset.readingMode;
+    if (nextMode === "structured" || nextMode === "original") {
+      articleViewMode = nextMode;
+      renderReader();
+      elements.reader.querySelector(`[data-reading-mode="${nextMode}"]`).focus();
+    }
+    return;
+  }
+
+  const referenceButton = target.closest("[data-reference-kind]");
+  if (referenceButton) {
+    toggleReferencePreview(referenceButton);
+    return;
+  }
+
+  if (target.id === "reference-preview-close") {
+    const trigger = elements.reader.querySelector(".reference-chip[aria-expanded='true']");
+    closeReferencePreview();
+    trigger?.focus();
+    return;
+  }
+
   if (target.id === "complete-toggle" && currentArticle) {
     const key = articleKey(currentArticle);
     state.completed = state.completed.includes(key)
@@ -553,6 +836,13 @@ elements.articleList.addEventListener("click", (event) => {
 });
 
 elements.reader.addEventListener("click", handleArticleAction);
+elements.reader.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape") return;
+  const trigger = elements.reader.querySelector(".reference-chip[aria-expanded='true']");
+  if (!trigger) return;
+  closeReferencePreview();
+  trigger.focus();
+});
 elements.reader.addEventListener("click", (event) => {
   if (event.target.id === "retry-load") start();
 });

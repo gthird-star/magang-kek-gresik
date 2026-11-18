@@ -296,7 +296,9 @@ progress::-moz-progress-bar {
   gap: 14px;
   padding: 18px;
   border: 1px solid var(--blue-line);
+  border-radius: 8px;
   background: var(--blue);
+  box-shadow: 0 2px 4px rgb(24 48 58 / 12%);
 }
 
 .control-field {
@@ -467,7 +469,7 @@ progress::-moz-progress-bar {
 
 .workspace {
   display: grid;
-  grid-template-columns: minmax(225px, 280px) minmax(0, 1fr);
+  grid-template-columns: minmax(190px, 0.26fr) minmax(0, 1fr);
   align-items: start;
   gap: clamp(24px, 4vw, 60px);
   margin-top: 20px;
@@ -480,6 +482,7 @@ progress::-moz-progress-bar {
   max-height: calc(100vh - 32px);
   overflow: auto;
   border: 1px solid var(--blue-line);
+  border-radius: 8px;
   background: var(--blue-soft);
 }
 
@@ -564,8 +567,8 @@ progress::-moz-progress-bar {
 }
 
 .step-link[aria-current="true"] {
-  background: #fff;
-  outline: 1px solid var(--ink);
+  background: var(--blue-deep);
+  outline: 1px solid var(--blue-line);
   outline-offset: -1px;
   font-weight: 700;
 }
@@ -609,12 +612,22 @@ progress::-moz-progress-bar {
 
 .lesson {
   max-width: 860px;
+  overflow: hidden;
+  border: 1px solid var(--blue-line);
+  border-radius: 8px;
   background: var(--paper);
+  box-shadow: 0 2px 5px rgb(24 48 58 / 10%);
+}
+
+@media (max-width: 1100px) {
+  .lesson {
+    max-width: 624px;
+  }
 }
 
 .lesson-head {
   padding: 18px clamp(20px, 4vw, 48px) 16px;
-  border: 1px solid var(--blue-line);
+  border-bottom: 1px solid var(--blue-line);
   background: var(--blue);
 }
 
@@ -657,8 +670,6 @@ progress::-moz-progress-bar {
 
 .lesson-body {
   padding: 20px clamp(20px, 4vw, 48px) 30px;
-  border: 1px solid var(--line);
-  border-top: 0;
 }
 
 .source-callout {
@@ -668,7 +679,8 @@ progress::-moz-progress-bar {
   gap: 16px;
   margin-bottom: 18px;
   padding: 11px 13px;
-  border: 1px solid var(--line-dark);
+  border: 1px solid var(--line);
+  border-radius: 6px;
   background: #f1f9fc;
   font-size: 12px;
 }
@@ -693,6 +705,207 @@ progress::-moz-progress-bar {
   line-height: 1.78;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+
+.provision-intro {
+  max-width: 720px;
+  margin-bottom: 12px;
+}
+
+.provision-list {
+  display: grid;
+  max-width: 720px;
+  gap: 16px;
+}
+
+.provision-card {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  padding: 11px 12px;
+  border: 1px solid var(--line-soft);
+  border-radius: 6px;
+  background: #f1f9fc;
+  box-shadow: 0 2px 3px rgb(24 48 58 / 12%);
+}
+
+.provision-number {
+  min-height: 100%;
+  padding-right: 8px;
+  border-right: 1px solid var(--blue-line);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+}
+
+.definition-term {
+  display: inline-block;
+  margin-bottom: 7px;
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--blue-soft);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.official-section > .official-text,
+.official-original {
+  max-width: 720px;
+}
+
+.provision-card .official-text {
+  max-width: none;
+  font-size: 15px;
+  line-height: 1.55;
+  white-space: normal;
+}
+
+.provision-group {
+  max-width: 720px;
+}
+
+.provision-group-heading {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.provision-group-heading > .official-text {
+  max-width: none;
+  font-size: 15px;
+  line-height: 1.55;
+  white-space: normal;
+}
+
+.provision-group-heading-plain {
+  display: block;
+}
+
+.provision-sublist {
+  display: grid;
+  gap: 12px;
+  margin-left: 42px;
+}
+
+.provision-subpoint {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+  padding: 9px 10px;
+  border: 1px solid var(--line-soft);
+  border-radius: 6px;
+  background: #f1f9fc;
+  box-shadow: 0 2px 3px rgb(24 48 58 / 12%);
+}
+
+.provision-subpoint .provision-number {
+  padding-right: 5px;
+}
+
+.provision-subpoint .official-text {
+  max-width: none;
+  font-size: 15px;
+  line-height: 1.55;
+  white-space: normal;
+}
+
+.reading-mode {
+  display: inline-flex;
+  flex-wrap: wrap;
+  border: 1px solid var(--line-dark);
+  background: #fff;
+}
+
+.reading-mode button {
+  min-height: 40px;
+  padding: 7px 10px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.reading-mode button + button {
+  border-left: 1px solid var(--line);
+}
+
+.reading-mode button[aria-pressed="true"] {
+  background: var(--blue-deep);
+}
+
+.reading-mode-note {
+  max-width: 720px;
+  margin: -5px 0 12px;
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+
+.reference-chip {
+  display: inline;
+  margin-inline: 1px;
+  padding: 1px 5px;
+  border: 1px solid var(--blue-line);
+  border-radius: 999px;
+  background: var(--blue-soft);
+  color: var(--accent-dark);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.reference-highlight {
+  background: var(--blue);
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.reference-preview {
+  max-width: 720px;
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid var(--blue-line);
+  border-radius: 8px;
+  background: #f7fcfd;
+  box-shadow: 0 2px 5px rgb(24 48 58 / 10%);
+}
+
+.reference-preview-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.reference-preview-heading h4 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.reference-preview-body {
+  max-height: 260px;
+  overflow: auto;
+  margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid var(--line-soft);
+  background: #fff;
+}
+
+.reference-preview-body .official-text {
+  max-width: none;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.reference-preview > a {
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .official-heading {
@@ -1016,6 +1229,19 @@ progress::-moz-progress-bar {
 
   .lesson-actions-group .button {
     padding-inline: 8px;
+  }
+
+  .official-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .reading-mode {
+    width: 100%;
+  }
+
+  .reading-mode button {
+    flex: 1;
   }
 }
 

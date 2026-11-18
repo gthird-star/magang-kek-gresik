@@ -52,7 +52,7 @@ PAGE_NOISE = re.compile(
     re.IGNORECASE,
 )
 LIST_ITEM = re.compile(r"^(?:\([0-9]+\)|[0-9]+[.)]|[a-z][.)])(?:\s+|$)", re.IGNORECASE)
-TRUNCATED_ITEM = re.compile(r"^(\d+)\.\s+[^.]+\.?\s*$")
+TRUNCATED_ITEM = re.compile(r"^(\d+)\.\s+[^.]+(?:\.\s*)*$")
 TRUNCATED_LETTER_ITEM = re.compile(r"^([a-z])\.\s+.{1,28}$", re.IGNORECASE)
 
 
@@ -82,6 +82,39 @@ def clean_line(value):
     return value
 
 
+def repair_split_point_number(lines):
+    markers = []
+    for index, line in enumerate(lines):
+        match = re.match(r"^(\d+)\.(?:\s|$)", line)
+        if match:
+            markers.append((index, match.group(1)))
+
+    repairs = []
+    for marker_index in range(1, len(markers) - 1):
+        line_index, number = markers[marker_index]
+        if (
+            number != "1"
+            or markers[marker_index - 1][1] != "10"
+            or markers[marker_index + 1][1] != "12"
+        ):
+            continue
+
+        next_marker_index = markers[marker_index + 1][0]
+        for orphan_index in range(line_index + 2, next_marker_index):
+            if (
+                lines[orphan_index] == "1"
+                and lines[orphan_index - 1].rstrip().endswith("maupun")
+                and lines[orphan_index + 1].lstrip().startswith("tidak berwujud")
+            ):
+                repairs.append((line_index, orphan_index))
+                break
+
+    for line_index, orphan_index in reversed(repairs):
+        # The PDF text order displaced the second digit of item 11 into its definition.
+        lines[line_index] = re.sub(r"^1\.", "11.", lines[line_index], count=1)
+        del lines[orphan_index]
+
+
 def join_text(lines):
     result = ""
     cleaned = []
@@ -89,6 +122,8 @@ def join_text(lines):
         line = clean_line(item[0] if isinstance(item, tuple) else item)
         if line:
             cleaned.append(line)
+
+    repair_split_point_number(cleaned)
 
     kept = []
     for index, line in enumerate(cleaned):
