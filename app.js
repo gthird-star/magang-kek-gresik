@@ -21,12 +21,22 @@ const elements = {
   progressLabel: document.querySelector("#progress-label"),
   progressBar: document.querySelector("#progress-bar"),
   progressDetail: document.querySelector("#progress-detail"),
+  homeProgressLabel: document.querySelector("#home-progress-label"),
+  homeProgressBar: document.querySelector("#home-progress-bar"),
+  homeProgressDetail: document.querySelector("#home-progress-detail"),
+  progressReadCount: document.querySelector("#progress-read-count"),
+  progressCheckedCount: document.querySelector("#progress-checked-count"),
+  progressTrackCount: document.querySelector("#progress-track-count"),
+  lastRead: document.querySelector("#last-read"),
+  completedArticles: document.querySelector("#completed-articles"),
   regulationFilter: document.querySelector("#regulation-filter"),
   trackFilter: document.querySelector("#track-filter"),
   search: document.querySelector("#article-search"),
   routeNote: document.querySelector("#route-note"),
   visibleCount: document.querySelector("#visible-count"),
   articleList: document.querySelector("#article-list"),
+  trackCards: document.querySelector("#track-cards"),
+  sourceList: document.querySelector("#source-list"),
   reader: document.querySelector("#reader"),
   trackBuilder: document.querySelector("#track-builder"),
   trackBuilderToggle: document.querySelector("#build-track-toggle"),
@@ -671,12 +681,94 @@ function renderReader() {
 function renderProgress() {
   const total = articles.length;
   const completed = state.completed.filter((key) => articles.some((article) => articleKey(article) === key)).length;
+  const selfChecked = state.selfChecked.filter((key) => articles.some((article) => articleKey(article) === key)).length;
+  const progressText = `${completed} dari ${total} pasal`;
+
   elements.progressLabel.textContent = `${completed} dari ${total} pasal`;
   elements.progressBar.max = Math.max(total, 1);
   elements.progressBar.value = completed;
   elements.progressDetail.textContent = total
     ? `Tandai pasal selesai setelah dibaca. ${regulations.length} PDF sumber tersedia.`
     : "Belum ada pasal untuk ditampilkan.";
+  elements.progressReadCount.textContent = String(completed);
+  elements.progressCheckedCount.textContent = String(selfChecked);
+  elements.progressTrackCount.textContent = String(state.customTracks.length);
+  elements.homeProgressLabel.textContent = progressText;
+  elements.homeProgressBar.max = Math.max(total, 1);
+  elements.homeProgressBar.value = completed;
+  elements.homeProgressDetail.textContent = "Progres tersimpan di browser ini.";
+
+  const lastArticle = articles.find((article) => articleKey(article) === state.lastArticle);
+  elements.lastRead.innerHTML = lastArticle
+    ? `
+      <button class="progress-entry-button" type="button" data-open-article="${escapeHtml(articleKey(lastArticle))}">
+        <span>${escapeHtml(formatRegulation(getRegulation(lastArticle)))}</span>
+        <strong>${escapeHtml(lastArticle.number)} · ${escapeHtml(lastArticle.chapter || "Bagian pasal")}</strong>
+        <span>Lanjutkan membaca</span>
+      </button>
+    `
+    : '<p class="empty-state">Belum ada bacaan terakhir. Pilih pasal untuk mulai belajar.</p>';
+
+  const completedArticles = articles.filter((article) => state.completed.includes(articleKey(article)));
+  elements.completedArticles.innerHTML = completedArticles.length
+    ? completedArticles.map((article) => `
+      <button class="completed-entry" type="button" data-open-article="${escapeHtml(articleKey(article))}">
+        <span>${escapeHtml(formatRegulation(getRegulation(article)))}</span>
+        <strong>${escapeHtml(article.number)}</strong>
+        <span class="completion-mark">Selesai</span>
+      </button>
+    `).join("")
+    : '<p class="empty-state">Belum ada pasal yang ditandai selesai.</p>';
+}
+
+function renderTrackCards() {
+  const tracks = [
+    {
+      id: "all",
+      title: "Gambaran umum",
+      description: "Jelajahi seluruh pasal dari tiga peraturan yang tersedia.",
+      count: articles.length
+    },
+    {
+      id: "waspal",
+      title: "Waspal · draf",
+      description: "Jalur awal untuk pendalaman. Cocokkan pilihan pasalnya dengan pembimbing.",
+      count: articles.filter((article) => WASPAL_ARTICLES.has(articleKey(article))).length
+    },
+    ...state.customTracks.map((track) => ({
+      id: track.id,
+      title: track.name,
+      description: "Jalur buatan sendiri yang tersimpan di browser ini.",
+      count: articles.filter((article) => track.articles.includes(articleKey(article))).length
+    }))
+  ];
+
+  elements.trackCards.innerHTML = tracks.map((track) => `
+    <article class="path-card ${state.activeTrack === track.id ? "is-active" : ""}">
+      <div class="path-card-heading">
+        <h3>${escapeHtml(track.title)}</h3>
+        <span>${track.count} pasal</span>
+      </div>
+      <p>${escapeHtml(track.description)}</p>
+      <button class="text-button" type="button" data-open-track="${escapeHtml(track.id)}">
+        ${state.activeTrack === track.id ? "Lihat materi" : "Pilih jalur"}
+      </button>
+    </article>
+  `).join("");
+}
+
+function renderSourceList() {
+  elements.sourceList.innerHTML = regulations.map((regulation) => `
+    <article class="source-card">
+      <div class="source-card-heading">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8l4 4V21H6z"/><path d="M14 3.5V8h4M9 12h6M9 16h6"/></svg>
+        <span>PDF · ${Number(regulation.pdfPages)} halaman</span>
+      </div>
+      <h3>${escapeHtml(formatRegulation(regulation))}</h3>
+      <p>${escapeHtml(regulation.title)}</p>
+      <a class="button button-primary" href="${escapeHtml(encodeURI(regulation.pdf))}" target="_blank" rel="noopener">Buka PDF asli</a>
+    </article>
+  `).join("");
 }
 
 function renderRouteNote() {
@@ -698,6 +790,8 @@ function renderAll() {
   renderReader();
   renderNavigation();
   renderProgress();
+  renderTrackCards();
+  renderSourceList();
   renderRouteNote();
   showStatus(storageNotice);
 }
@@ -717,6 +811,7 @@ function setCurrentArticle(key) {
     showStatus("Pasal yang dipilih tidak ditemukan di daftar sumber.");
     return;
   }
+  navigateToView("daftar-regulasi");
   currentArticle = article;
   state.lastArticle = key;
   saveState();
@@ -725,6 +820,40 @@ function setCurrentArticle(key) {
     elements.indexDetails.open = false;
   }
   document.querySelector("#reader").focus({ preventScroll: true });
+}
+
+function showView(viewId) {
+  const allowedViews = new Set(["jalur-belajar", "progres-saya", "daftar-regulasi", "tentang-sumber"]);
+  const activeView = allowedViews.has(viewId) ? viewId : "jalur-belajar";
+  document.querySelectorAll(".view-panel").forEach((panel) => {
+    panel.hidden = panel.id !== activeView;
+  });
+  document.querySelectorAll("[data-view-link]").forEach((link) => {
+    if (link.dataset.viewLink === activeView) {
+      link.setAttribute("aria-current", "page");
+    } else {
+      link.removeAttribute("aria-current");
+    }
+  });
+}
+
+function syncViewFromLocation() {
+  const hash = window.location.hash.slice(1);
+  const legacyView = {
+    reader: "daftar-regulasi",
+    "article-controls": "daftar-regulasi",
+    "progress-summary": "progres-saya",
+    "source-notice": "tentang-sumber",
+    "track-builder": "jalur-belajar"
+  }[hash];
+  showView(legacyView || hash);
+}
+
+function navigateToView(viewId) {
+  if (window.location.hash !== `#${viewId}`) {
+    window.history.pushState(null, "", `#${viewId}`);
+  }
+  showView(viewId);
 }
 
 function renderTrackOptions() {
@@ -870,7 +999,10 @@ async function start() {
     fillRegulationFilter();
     fillTrackFilter();
     currentArticle = articles.find((article) => articleKey(article) === state.lastArticle) || articles[0];
-    state.lastArticle = articleKey(currentArticle);
+    if (!window.location.hash) {
+      window.history.replaceState(null, "", "#jalur-belajar");
+    }
+    syncViewFromLocation();
     saveState();
     renderAll();
   } catch (error) {
@@ -890,6 +1022,37 @@ elements.articleList.addEventListener("click", (event) => {
   if (button) setCurrentArticle(button.dataset.articleKey);
 });
 
+elements.trackCards.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-open-track]");
+  if (!button) return;
+  const trackId = button.dataset.openTrack;
+  const hasTrack = trackId === "all"
+    || trackId === "waspal"
+    || state.customTracks.some((track) => track.id === trackId);
+  if (!hasTrack) return;
+  elements.trackFilter.value = trackId;
+  state.activeTrack = trackId;
+  currentArticle = null;
+  saveState();
+  renderAll();
+  navigateToView("daftar-regulasi");
+});
+
+document.querySelector("#start-overview").addEventListener("click", () => {
+  elements.trackFilter.value = "all";
+  state.activeTrack = "all";
+  currentArticle = null;
+  saveState();
+  renderAll();
+});
+
+document.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-open-article]");
+  if (button) setCurrentArticle(button.dataset.openArticle);
+});
+
+window.addEventListener("hashchange", syncViewFromLocation);
+window.addEventListener("popstate", syncViewFromLocation);
 elements.reader.addEventListener("click", handleArticleAction);
 elements.reader.addEventListener("toggle", (event) => {
   const preview = event.target;

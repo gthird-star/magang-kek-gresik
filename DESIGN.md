@@ -1,205 +1,100 @@
 ---
 name: Buku Belajar KEK Gresik
-description: A calm, numbered field guide for learning the KEK regulations.
+description: A clear, locally saved study guide for reading KEK regulations.
 colors:
-  ink: "#18303a"
-  ink-soft: "#3d5964"
-  sky-paper: "#dff3fa"
-  sky-deep: "#b7dfec"
-  sky-line: "#88b8c8"
+  ink: "#17343b"
+  ink-soft: "#526b71"
+  teal: "#104f5a"
+  teal-deep: "#0c505a"
+  teal-soft: "#dff1f2"
+  teal-line: "#85b7bd"
   paper: "#ffffff"
-  ground: "#f3f8fa"
-  source-blue: "#145c78"
-  source-blue-deep: "#10465c"
-  warning: "#8a4218"
-  warning-line: "#d5a77e"
-  warning-paper: "#fff8f1"
-  sky-soft: "#eaf6fa"
-  line-soft: "#d4e5eb"
-  success: "#245c3b"
-  disabled-line: "#9fb3bb"
-  disabled-paper: "#e9eff1"
-  disabled-ink: "#54676f"
+  ground: "#f3f6f7"
+  accent: "#126572"
+  accent-warm: "#f4a17f"
   line: "#b9cdd4"
-  line-dark: "#76949e"
+  success: "#245c3b"
+  warning: "#8a4218"
   focus: "#bf4b22"
 typography:
   display:
     fontFamily: "Public Sans"
-    fontSize: "clamp(32px, 3.8vw, 52px)"
+    fontSize: "clamp(34px, 4vw, 54px)"
     fontWeight: 700
-    lineHeight: 1.08
-    letterSpacing: "-0.03em"
+    lineHeight: 1.07
+    letterSpacing: "-0.035em"
   headline:
     fontFamily: "Public Sans"
     fontSize: "clamp(28px, 3.2vw, 38px)"
     fontWeight: 700
     lineHeight: 1.08
-  builder-title:
-    fontFamily: "Public Sans"
-    fontSize: "25px"
-    fontWeight: 700
-  empty-title:
-    fontFamily: "Public Sans"
-    fontSize: "28px"
-    fontWeight: 700
-  section-title:
-    fontFamily: "Public Sans"
-    fontSize: "15px"
-    fontWeight: 700
-  lead:
-    fontFamily: "Public Sans"
-    fontSize: "17px"
-    lineHeight: 1.55
   body:
     fontFamily: "Public Sans"
     fontSize: "16px"
     lineHeight: 1.55
-  control:
+  legal-text:
     fontFamily: "Public Sans"
-    fontSize: "14px"
-  compact:
-    fontFamily: "Public Sans"
-    fontSize: "13px"
-  meta:
-    fontFamily: "Public Sans"
-    fontSize: "12px"
-  label:
-    fontFamily: "Public Sans"
-    fontSize: "11px"
-    fontWeight: 700
-    letterSpacing: "0.1em"
+    fontSize: "16px"
+    lineHeight: 1.78
 rounded:
-  square: "0"
-  reader-card: "8px"
-  provision-card: "6px"
-  term-badge: "4px"
-  reference-pill: "999px"
+  control: "6px"
+  card: "10px"
+  reader: "12px"
 spacing:
   control-gap: "14px"
   field-padding: "9px 11px"
-components:
-  button-primary:
-    backgroundColor: "{colors.source-blue}"
-    textColor: "{colors.paper}"
-    rounded: "{rounded.square}"
-    padding: "10px 15px"
-    height: "43px"
-  button-outline:
-    backgroundColor: "{colors.paper}"
-    textColor: "{colors.ink}"
-    rounded: "{rounded.square}"
-    padding: "10px 15px"
-    height: "43px"
 ---
 
 # Design System: Buku Belajar KEK Gresik
 
-## Overview
+## Direction
 
-**Creative North Star: "Panduan Langkah"**
+The interface is a practical reading desk for a numbered learning guide. A deep teal navigation rail anchors four focused views; the regulation reader remains a quiet, high-contrast document surface. Warm coral is a small progress accent, not a second primary color.
 
-The interface treats the regulations as a numbered study sequence, not as a generic dashboard. Sky-blue surfaces and dark ink recall an instruction booklet, while the legal text stays in a quiet, readable column with clear links back to each original PDF page.
+The provided UI references guide the information architecture and overall composition. Their unsupported regulation names, sample counts, profile, streaks, and promotional text are not copied. The supplied learning illustration is shown on a white panel because its PNG has a white background.
 
-The visual system is flat and deliberately restrained. Sequence markers help readers navigate, but they never replace official article numbers or wording. Learning aids and locally saved progress remain distinct from the source text.
+## Product rules
 
-**Key Characteristics:**
-- Numbered, navigable study steps.
-- Exact source wording with visible PDF references.
-- Local-first, low-distraction reading.
+- Preserve regulation names, complete article text, explanations, and PDF page references from the source data.
+- Keep original PDFs readily accessible and label learning aids separately from official text.
+- All progress and custom paths remain local to the current browser.
+- Show progress from stored completion/check state only. Do not invent streaks, scores, identities, or user accounts.
+- The Waspal path remains explicitly marked as a draft.
 
 ## Colors
 
-Soft sky blues establish the booklet surfaces; dark ink carries reading and navigation, with a deeper blue reserved for actions and source links.
-
-### Primary
-- **Source Blue** (#145c78): Primary actions and progress.
-- **Deep Source Blue** (#10465c): Hover state and strong links.
-
-### Secondary
-- **Sky Paper** (#dff3fa): Masthead, lesson heading, and control surface.
-- **Deep Sky** (#b7dfec): Secondary blue surface and selection tint.
-
-### Neutral
-- **Ink** (#18303a): Headings and primary text.
-- **Soft Ink** (#3d5964): Supporting text on light surfaces.
-- **Paper** (#ffffff): Reading surface and outlined controls.
-- **Ground** (#f3f8fa): Page background.
-- **Pale Line** (#b9cdd4) and **Dark Line** (#76949e): Separators and control borders.
-- **Focus Orange** (#bf4b22): Visible keyboard focus.
-- **Warning Brown** (#8a4218): Storage and recovery messages.
+- **Deep teal** `#104f5a`: hero and selected navigation.
+- **Teal ink** `#17343b`: headings and primary text.
+- **Teal action** `#126572`: links, controls, and progress.
+- **Pale teal** `#dff1f2`: grouped learning controls and article header.
+- **Warm coral** `#f4a17f`: restrained progress emphasis.
+- **Paper** `#ffffff`; **ground** `#f3f6f7`; **soft ink** `#526b71`.
+- **Focus** `#bf4b22`: visible keyboard focus.
 
 ## Typography
 
-**Display Font:** Public Sans, self-hosted from `assets/fonts/public-sans-latin.woff2`  
-**Body Font:** Public Sans  
-**Label Font:** Public Sans; monospace is reserved for step numerals.
-
-**Character:** Public Sans gives the guide a clear, contemporary public-information voice. Compact uppercase labels and tabular step numbers organize the interface without competing with long legal passages.
-
-### Hierarchy
-- **Display** (700, `clamp(32px, 3.8vw, 52px)`, 1.08): Page title.
-- **Headline** (700, `clamp(28px, 3.2vw, 38px)`, 1.08): Current article.
-- **Title** (700, 15–25px): Section and builder headings.
-- **Body** (400, 16px, 1.55): Interface copy; official text uses 1.78 line-height and a 70ch measure.
-- **Label** (700, 10–12px, tracked): Navigation metadata, source labels, and progress.
+Public Sans is self-hosted from `assets/fonts/public-sans-latin.woff2`. Use it for all interface and legal text. Body copy starts at 16px; legal text keeps a readable measure near 70ch and line-height 1.78. Headings use a clear scale with tight but restrained tracking.
 
 ## Layout
 
-The desktop page uses a wide container capped at 1440px, with a compact regulation index beside an 860px lesson column. The index remains sticky on wide screens. On small screens the layout stacks, the index starts collapsed, and filters reduce to a two-column arrangement where space allows. Controls retain a 43px minimum height for touch.
+- Desktop: a 256px white left navigation rail with a flexible content column capped at 1440px.
+- Mobile: a fixed four-item bottom navigation with safe-area padding; content receives enough bottom space to remain unobscured.
+- The learning view pairs a dark teal introduction with the supplied illustration on white, followed by selectable paths.
+- Progress is a dedicated view with computed completion, self-check, saved-path counts, last selected article, and completed articles.
+- Regulation reading pairs the searchable article index with the full reader; the index becomes a stacked, collapsible panel on mobile.
+- Sources have their own view with direct PDF links and the existing extraction/legal-use notice.
 
-The article body is kept to a 70ch measure. Tight control groups use 10–14px gaps; larger reading sections receive more separation.
+## Components and states
 
-## Elevation & Depth
+- Navigation targets are at least 44px tall and keep a visible keyboard focus ring.
+- Buttons and fields use clear borders, square-to-soft corners, and explicit hover/disabled states.
+- Article source links and page references stay adjacent to official text.
+- Empty states explain the next useful action. Storage errors remain visible through the live status message.
+- Motion is limited to a short view transition and respects `prefers-reduced-motion`.
+- Icons use consistent inline SVG strokes; emoji are not used as controls.
 
-Most of the guide stays flat. The article reader and numbered provision cards use a restrained, soft shadow to separate their reading surfaces from the page; keep other components defined by color and thin borders.
+## Avoid
 
-## Shapes
-
-Buttons and fields keep square corners (`border-radius: 0`) and thin, purposeful outlines. The article reader, provision cards, index, and control strip use modest 6–8px corners; avoid pill-shaped containers.
-
-## Components
-
-### Buttons
-- **Shape:** Square corners, 1px ink border.
-- **Primary:** Source Blue with white text; 43px minimum height and 10px 15px padding.
-- **Hover / Focus:** Darken the primary action on hover; use the shared high-contrast focus outline for keyboard navigation.
-- **Secondary:** White surface with dark ink; hover shifts to a pale blue.
-
-### Chips
-- **Style:** White surface, 1px dark-ink outline, tabular step count.
-- **State:** The active article is distinguished in the index without changing its official number.
-
-### Cards / Containers
-- **Background:** White for the lesson body; sky blue for the lesson heading and control strip.
-- **Shadow Strategy:** Restrained soft shadows on the lesson, control strip, and provision cards; other surfaces remain flat.
-- **Border:** 1px blue or neutral line, depending on context.
-- **Provision text:** Split numbered clauses, ayat, and lettered subpoints into softly tinted rows with fixed-width number columns and clear spacing. Pasal 1 definitions show a bold term label.
-- **Reading mode:** Keep the structured-points and full extracted-text views adjacent; the latter remains available for checking source wording.
-- **Term labels:** Definition names use compact, softly tinted badges.
-- **References:** Known article and ayat references use keyboard-accessible pill chips that reveal the cited text and link to its source PDF page.
-
-### Inputs / Fields
-- **Style:** White surface, square corners, 1px dark-line border, 43px minimum height.
-- **Focus:** 3px orange outline with visible offset.
-- **Error / Disabled:** Storage errors use the warning palette; disabled lesson navigation uses a muted neutral surface.
-
-### Navigation
-- **Style:** Underlined, bold links in dark ink.
-- **Desktop:** Sticky regulation index beside the reader.
-- **Mobile:** Collapsible index above the reader; selecting an article closes it.
-
-### Source Callout
-- Keep the official PDF link and page reference together immediately above the provision text. The PDF remains the authoritative source.
-
-## Do's and Don'ts
-
-### Do:
-- **Do** preserve the official article number, wording, regulation title, and PDF page reference.
-- **Do** make study paths and recall prompts visibly separate from official text.
-- **Do** keep progress and custom paths local to the current browser.
-
-### Don't:
-- **Don't** invent legal summaries or imply that the Waspal draft path is an official syllabus.
-- **Don't** hide the source PDF behind a secondary navigation step.
-- **Don't** add decorative shadows, rounded-card scaffolds, or colors outside the established palette.
+- Hiding source material, shortening official text, or presenting partial JSON notes as complete law.
+- Invented progress analytics, profile cards, streaks, or official-looking learning paths.
+- Generic dashboard metrics, decorative gradients, excessive shadows, or low-contrast text.
