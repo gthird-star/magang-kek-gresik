@@ -865,13 +865,19 @@ progress::-moz-progress-bar {
   font-weight: 700;
 }
 
-.reference-preview {
-  max-width: 720px;
-  margin-top: 12px;
+.reference-preview[popover] {
+  position: fixed;
+  inset: auto;
+  width: min(420px, calc(100vw - 24px));
+  max-width: none;
+  max-height: min(420px, calc(100vh - 24px));
+  overflow: auto;
+  margin: 0;
   padding: 14px;
   border: 1px solid var(--blue-line);
   border-radius: 8px;
   background: #f7fcfd;
+  color: var(--ink);
   box-shadow: 0 2px 5px rgb(24 48 58 / 10%);
 }
 
@@ -889,7 +895,7 @@ progress::-moz-progress-bar {
 }
 
 .reference-preview-body {
-  max-height: 260px;
+  max-height: min(260px, calc(100vh - 180px));
   overflow: auto;
   margin-bottom: 10px;
   padding: 10px;

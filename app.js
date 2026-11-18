@@ -409,11 +409,11 @@ function renderTextWithReferences(text, article) {
         item.regulationId === article.regulationId && item.number === `Pasal ${match[1]}`
       );
       output += target
-        ? `<button class="reference-chip" type="button" data-reference-kind="article" data-reference-key="${escapeHtml(articleKey(target))}" aria-controls="reference-preview" aria-expanded="false" aria-label="Intip isi ${escapeHtml(label)}">${escapeHtml(label)}</button>`
+        ? `<button class="reference-chip" type="button" data-reference-kind="article" data-reference-key="${escapeHtml(articleKey(target))}" aria-haspopup="dialog" aria-controls="reference-preview" aria-expanded="false" aria-label="Intip isi ${escapeHtml(label)}">${escapeHtml(label)}</button>`
         : `<mark class="reference-highlight">${escapeHtml(label)}</mark>`;
     } else {
       output += paragraphNumbers.has(match[2])
-        ? `<button class="reference-chip" type="button" data-reference-kind="paragraph" data-reference-number="${escapeHtml(match[2])}" aria-controls="reference-preview" aria-expanded="false" aria-label="Intip isi ayat (${escapeHtml(match[2])})">${escapeHtml(label)}</button>`
+        ? `<button class="reference-chip" type="button" data-reference-kind="paragraph" data-reference-number="${escapeHtml(match[2])}" aria-haspopup="dialog" aria-controls="reference-preview" aria-expanded="false" aria-label="Intip isi ayat (${escapeHtml(match[2])})">${escapeHtml(label)}</button>`
         : `<mark class="reference-highlight">${escapeHtml(label)}</mark>`;
     }
     lastIndex = referencePattern.lastIndex;
@@ -469,11 +469,49 @@ function renderOfficialText(text, article, mode = articleViewMode) {
 function closeReferencePreview() {
   const preview = elements.reader.querySelector("#reference-preview");
   if (!preview) return;
-  preview.hidden = true;
+  const trigger = elements.reader.querySelector(".reference-chip[aria-expanded='true']");
+  if (preview.matches(":popover-open")) preview.hidePopover();
   preview.replaceChildren();
   elements.reader.querySelectorAll(".reference-chip[aria-expanded='true']").forEach((button) => {
     button.setAttribute("aria-expanded", "false");
   });
+  trigger?.focus({ preventScroll: true });
+}
+
+function positionReferencePreview(preview, button) {
+  const gap = 8;
+  const margin = 12;
+  const triggerRect = button.getBoundingClientRect();
+  const previewRect = preview.getBoundingClientRect();
+  const maxLeft = window.innerWidth - previewRect.width - margin;
+  const left = Math.max(margin, Math.min(triggerRect.left, maxLeft));
+  const belowTop = triggerRect.bottom + gap;
+  const top = belowTop + previewRect.height <= window.innerHeight - margin
+    ? belowTop
+    : Math.max(margin, triggerRect.top - previewRect.height - gap);
+
+  preview.style.left = `${left}px`;
+  preview.style.top = `${top}px`;
+}
+
+function updateReferencePreviewPosition(event) {
+  const preview = elements.reader.querySelector("#reference-preview");
+  if (!preview?.matches(":popover-open")) return;
+  if (event?.target instanceof Node && preview.contains(event.target)) return;
+
+  const trigger = elements.reader.querySelector(".reference-chip[aria-expanded='true']");
+  if (!trigger) {
+    closeReferencePreview();
+    return;
+  }
+
+  const rect = trigger.getBoundingClientRect();
+  if (rect.bottom < 0 || rect.top > window.innerHeight || rect.right < 0 || rect.left > window.innerWidth) {
+    closeReferencePreview();
+    return;
+  }
+
+  positionReferencePreview(preview, trigger);
 }
 
 function toggleReferencePreview(button) {
@@ -504,10 +542,9 @@ function toggleReferencePreview(button) {
     text = paragraph.text;
   }
 
-  button.setAttribute("aria-expanded", "true");
   preview.innerHTML = `
     <div class="reference-preview-heading">
-      <h4>Intip ${escapeHtml(title)}</h4>
+      <h4 id="reference-preview-title">Intip ${escapeHtml(title)}</h4>
       <button class="text-button" id="reference-preview-close" type="button">Tutup</button>
     </div>
     <div class="reference-preview-body">
@@ -515,7 +552,10 @@ function toggleReferencePreview(button) {
     </div>
     <a href="${escapeHtml(makePdfUrl(regulation, page))}" target="_blank" rel="noopener">Buka ${escapeHtml(title)} di PDF asli</a>
   `;
-  preview.hidden = false;
+  preview.showPopover();
+  button.setAttribute("aria-expanded", "true");
+  positionReferencePreview(preview, button);
+  preview.querySelector("#reference-preview-close").focus({ preventScroll: true });
 }
 
 function renderReader() {
@@ -572,7 +612,7 @@ function renderReader() {
           </div>
           <p class="reading-mode-note">${articleViewMode === "structured" ? "Poin disusun dari teks sumber; fragmen duplikat yang terpotong disembunyikan." : "Teks mengikuti hasil ekstraksi PDF. Cocokkan dengan PDF asli bila redaksi terlihat janggal."}</p>
           ${renderOfficialText(currentArticle.text, currentArticle)}
-          <div class="reference-preview" id="reference-preview" hidden aria-live="polite"></div>
+          <div class="reference-preview" id="reference-preview" popover="auto" role="dialog" aria-labelledby="reference-preview-title"></div>
         </section>
         ${hasExplanation ? `
           <details class="explanation">
@@ -728,9 +768,7 @@ function handleArticleAction(event) {
   }
 
   if (target.id === "reference-preview-close") {
-    const trigger = elements.reader.querySelector(".reference-chip[aria-expanded='true']");
     closeReferencePreview();
-    trigger?.focus();
     return;
   }
 
@@ -836,13 +874,32 @@ elements.articleList.addEventListener("click", (event) => {
 });
 
 elements.reader.addEventListener("click", handleArticleAction);
+elements.reader.addEventListener("toggle", (event) => {
+  const preview = event.target;
+  if (
+    !(preview instanceof HTMLElement)
+    || preview.id !== "reference-preview"
+    || event.newState !== "closed"
+    || preview.matches(":popover-open")
+  ) {
+    return;
+  }
+
+  const trigger = elements.reader.querySelector(".reference-chip[aria-expanded='true']");
+  trigger?.setAttribute("aria-expanded", "false");
+  if (trigger && preview.contains(document.activeElement)) {
+    trigger.focus({ preventScroll: true });
+  }
+}, true);
 elements.reader.addEventListener("keydown", (event) => {
   if (event.key !== "Escape") return;
-  const trigger = elements.reader.querySelector(".reference-chip[aria-expanded='true']");
-  if (!trigger) return;
+  const preview = elements.reader.querySelector("#reference-preview");
+  if (!preview?.matches(":popover-open")) return;
+  event.preventDefault();
   closeReferencePreview();
-  trigger.focus();
 });
+window.addEventListener("scroll", updateReferencePreviewPosition, true);
+window.addEventListener("resize", updateReferencePreviewPosition);
 elements.reader.addEventListener("click", (event) => {
   if (event.target.id === "retry-load") start();
 });
