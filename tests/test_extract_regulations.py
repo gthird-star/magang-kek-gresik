@@ -1,9 +1,15 @@
 import unittest
 
-from scripts.extract_regulations import article_marker, join_text, parse_articles
+from scripts.extract_regulations import article_marker, clean_line, join_text, parse_articles
 
 
 class ArticleMarkerTests(unittest.TestCase):
+    def test_repairs_ocr_closed_parenthesis_and_page_noise(self):
+        self.assertEqual(
+            clean_line("Pengenaan sanksi sebagaimana dimaksud pada ayat (21 dilakukan."),
+            "Pengenaan sanksi sebagaimana dimaksud pada ayat (2) dilakukan.",
+        )
+        self.assertEqual(clean_line("REFUBLIK INDONESIA _ 186-"), "")
     def test_accepts_marker_without_space_before_number(self):
         self.assertEqual(article_marker([("Pasal24", 1)], 0), ("24", 0))
         self.assertEqual(article_marker([("PasaJ22", 1)], 0), ("22", 0))

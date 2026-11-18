@@ -23,11 +23,11 @@ REGULATIONS = [
         "title": "Kawasan Ekonomi Khusus Gresik",
     },
     {
-        "id": "pp-48-2025",
-        "file": "PP_48_2025.pdf",
-        "number": "48",
+        "id": "pp-28-2025",
+        "file": "PP_28_2025.pdf",
+        "number": "28",
         "year": 2025,
-        "title": "Penertiban Kawasan dan Tanah Telantar",
+        "title": "Penyelenggaraan Perizinan Berusaha Berbasis Risiko",
     },
 ]
 
@@ -67,16 +67,20 @@ def clean_line(value):
     if re.fullmatch(r"\s*BAB[IVXLCDM]+(?:\s+.*)?", value, re.IGNORECASE):
         return ""
     value = re.sub(
-        r"\s*(?:PRES\s*IDEN|PFIESIDEN|FRESIDEN|REPU\w*|UBLIK INOONESIA|"
+        r"\s*(?:PRES\s*IDEN|PFIESIDEN|FRESIDEN|REF?UBLIK|REFUBLIK|REPU\w*|UBLIK INOONESIA|"
         r"BUK INDONESIA|R,?E?PUBLIK INDONESIA|[A-Z]{1,3}E?PUB[A-Z]*\s+(?:INDONESIA|INOONESIA))\b.*$",
         "",
         value,
     )
     value = re.sub(r"\s*SK\s*No.*$", "", value, flags=re.IGNORECASE)
     value = re.sub(r"\s*[-–]\s*\d+\s*[-–]\s*$", "", value)
+    value = re.sub(r"\s*[_–-]\s*\d+\s*-?\s*$", "", value)
+    value = re.sub(r"\((\d)1(?=[A-Za-z\s.,:;]|$)", r"(\1)", value)
     value = re.sub(r"\s+", " ", value).strip()
     value = re.sub(r"^(\d+)\.(?=\S)", r"\1. ", value)
     value = re.sub(r"^([a-z])\.(?=\S)", r"\1. ", value, flags=re.IGNORECASE)
+    if re.fullmatch(r"\(\d+\)\s*Pengenaan", value, re.IGNORECASE):
+        return ""
     if not value or PAGE_NOISE.fullmatch(value):
         return ""
     return value
@@ -124,6 +128,26 @@ def join_text(lines):
             cleaned.append(line)
 
     repair_split_point_number(cleaned)
+
+    merged_page_splits = []
+    index = 0
+    while index < len(cleaned):
+        line = cleaned[index]
+        if index + 1 < len(cleaned):
+            next_line = cleaned[index + 1]
+            line_match = re.match(r"^\((\d+)\)\s*(.+)$", line)
+            next_match = re.match(r"^\((\d+)\)\s*(.+)$", next_line)
+            if (
+                line_match
+                and next_match
+                and line_match.group(1) == next_match.group(1)
+                and next_match.group(2).startswith(line_match.group(2))
+            ):
+                index += 1
+                continue
+        merged_page_splits.append(line)
+        index += 1
+    cleaned = merged_page_splits
 
     kept = []
     for index, line in enumerate(cleaned):
@@ -285,7 +309,39 @@ def parse_articles(lines):
 def split_sections(pages):
     lines = []
     for page_number, text in enumerate(pages, start=1):
-        lines.extend((line, page_number) for line in text.splitlines())
+        page_lines = [(line, page_number) for line in text.splitlines()]
+        first_content = next(
+            (index for index, (line, _) in enumerate(page_lines)
+             if clean_line(line)),
+            None,
+        )
+        last_content = next(
+            (index for index in range(len(page_lines) - 1, -1, -1)
+             if clean_line(page_lines[index][0])),
+            None,
+        )
+
+        if first_content is not None and last_content is not None and page_number > 1:
+            previous_page_line = next(
+                (index for index in range(len(lines) - 1, -1, -1)
+                 if clean_line(lines[index][0])
+                 and lines[index][1] == page_number - 1),
+                None,
+            )
+            if previous_page_line is not None:
+                previous_text = clean_line(lines[previous_page_line][0])
+                next_text = clean_line(page_lines[first_content][0])
+                previous_match = re.match(r"^\((\d+)\)\s*(.+)$", previous_text)
+                next_match = re.match(r"^\((\d+)\)\s*(.+)$", next_text)
+                if (
+                    previous_match
+                    and next_match
+                    and previous_match.group(1) == next_match.group(1)
+                    and next_match.group(2).startswith(previous_match.group(2))
+                ):
+                    del lines[previous_page_line]
+
+        lines.extend(page_lines)
 
     explanation_index = next(
         (

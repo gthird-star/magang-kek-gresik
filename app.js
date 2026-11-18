@@ -10,10 +10,10 @@ const WASPAL_ARTICLES = new Set([
   "pp-40-2021|Pasal 89",
   "pp-71-2021|Pasal 5",
   "pp-71-2021|Pasal 6",
-  "pp-48-2025|Pasal 2",
-  "pp-48-2025|Pasal 4",
-  "pp-48-2025|Pasal 8",
-  "pp-48-2025|Pasal 14"
+  "pp-28-2025|Pasal 2",
+  "pp-28-2025|Pasal 4",
+  "pp-28-2025|Pasal 8",
+  "pp-28-2025|Pasal 14"
 ]);
 
 const elements = {
@@ -229,37 +229,51 @@ function renderNavigation() {
   }
 
   const groups = groupByRegulationAndChapter(visible);
-  elements.articleList.innerHTML = groups.map(({ regulation, chapters }) => `
-    <section class="regulation-group">
-      <h3>${escapeHtml(formatRegulation(regulation))}</h3>
-      <p>${escapeHtml(regulation.title)}</p>
-      ${chapters.map((chapter, chapterIndex) => {
-        const isCurrentChapter = currentArticle?.regulationId === regulation.id
-          && currentArticle?.chapter === chapter.title;
-        const detailsOpen = isCurrentChapter || (elements.search.value.trim() && chapterIndex < 2);
-        const chapterTitle = chapter.title || "Pasal utama";
-        return `
-          <details class="chapter-group" ${detailsOpen ? "open" : ""}>
-            <summary>${escapeHtml(chapterTitle)} <span>${chapter.articles.length}</span></summary>
-            <div>
-              ${chapter.articles.map((article) => {
-                const key = articleKey(article);
-                const selected = currentArticle && articleKey(currentArticle) === key;
-                const completed = state.completed.includes(key);
-                return `
-                  <button class="step-link" type="button" data-article-key="${escapeHtml(key)}" aria-current="${selected ? "true" : "false"}">
-                    <span class="step-number">${escapeHtml(article.number.replace("Pasal ", ""))}</span>
-                    <span class="step-label">${escapeHtml(article.number)}</span>
-                    ${completed ? '<span class="step-complete">Selesai</span>' : ""}
-                  </button>
-                `;
-              }).join("")}
-            </div>
-          </details>
-        `;
-      }).join("")}
-    </section>
-  `).join("");
+  const hasSearch = Boolean(elements.search.value.trim());
+  elements.articleList.innerHTML = groups.map(({ regulation, chapters }) => {
+    const regulationArticleCount = chapters.reduce(
+      (count, chapter) => count + chapter.articles.length,
+      0
+    );
+    const regulationIsCurrent = currentArticle?.regulationId === regulation.id;
+
+    return `
+      <details class="regulation-group" ${regulationIsCurrent || hasSearch ? "open" : ""}>
+        <summary>
+          <span class="regulation-name" role="heading" aria-level="3">${escapeHtml(formatRegulation(regulation))}</span>
+          <span class="regulation-count">${regulationArticleCount}</span>
+        </summary>
+        <div class="regulation-content">
+          <p>${escapeHtml(regulation.title)}</p>
+          ${chapters.map((chapter) => {
+            const isCurrentChapter = currentArticle?.regulationId === regulation.id
+              && currentArticle?.chapter === chapter.title;
+            const detailsOpen = isCurrentChapter || hasSearch;
+            const chapterTitle = chapter.title || "Pasal utama";
+            return `
+              <details class="chapter-group" ${detailsOpen ? "open" : ""}>
+                <summary>${escapeHtml(chapterTitle)} <span>${chapter.articles.length}</span></summary>
+                <div>
+                  ${chapter.articles.map((article) => {
+                    const key = articleKey(article);
+                    const selected = currentArticle && articleKey(currentArticle) === key;
+                    const completed = state.completed.includes(key);
+                    return `
+                      <button class="step-link" type="button" data-article-key="${escapeHtml(key)}" aria-current="${selected ? "true" : "false"}">
+                        <span class="step-number">${escapeHtml(article.number.replace("Pasal ", ""))}</span>
+                        <span class="step-label">${escapeHtml(article.number)}</span>
+                        ${completed ? '<span class="step-complete">Selesai</span>' : ""}
+                      </button>
+                    `;
+                  }).join("")}
+                </div>
+              </details>
+            `;
+          }).join("")}
+        </div>
+      </details>
+    `;
+  }).join("");
 }
 
 function makePdfUrl(regulation, page) {
@@ -267,7 +281,10 @@ function makePdfUrl(regulation, page) {
 }
 
 function parseStructuredText(text) {
-  const source = String(text);
+  const source = String(text)
+    .replace(/\((\d)1(?=[A-Za-z\s.,:;]|$)/g, "($1)")
+    .replace(/\bREFUBLIK\b/gi, "REPUBLIK")
+    .replace(/\s*[_–-]\s*\d+\s*-?\s*$/gm, "");
   const numberedMarkers = [];
   const numberedPattern = /(^|\n)(\d+)\.[ \t]+/g;
   let match;

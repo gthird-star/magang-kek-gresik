@@ -8,15 +8,15 @@
 
 :root {
   color-scheme: light;
-  --ink: #18303a;
-  --ink-soft: #3d5964;
+  --ink: #0f172a;
+  --ink-soft: #334155;
   --blue: #dff3fa;
   --blue-deep: #b7dfec;
   --blue-line: #88b8c8;
   --paper: #ffffff;
-  --ground: #f3f8fa;
-  --accent: #145c78;
-  --accent-dark: #10465c;
+  --ground: #f8fafc;
+  --accent: #0369a1;
+  --accent-dark: #075985;
   --warning: #8a4218;
   --warning-line: #d5a77e;
   --warning-paper: #fff8f1;
@@ -29,6 +29,13 @@
   --line: #b9cdd4;
   --line-dark: #76949e;
   --focus: #bf4b22;
+  --shadow-sm: 0 1px 2px rgb(15 23 42 / 5%);
+  --shadow-md: 0 4px 10px rgb(15 23 42 / 8%);
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
   font-family: "Public Sans", Arial, Helvetica, sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -143,7 +150,8 @@ a:hover {
   gap: 24px;
   padding: 12px clamp(20px, 5vw, 72px);
   border-bottom: 1px solid var(--blue-line);
-  background: var(--blue);
+  background: rgb(223 243 250 / 96%);
+  backdrop-filter: blur(10px);
 }
 
 .brand {
@@ -187,6 +195,12 @@ a:hover {
 .top-nav a {
   color: var(--ink);
   text-decoration-thickness: 1px;
+  text-decoration-color: transparent;
+  transition: color 180ms ease, text-decoration-color 180ms ease;
+}
+
+.top-nav a:hover {
+  text-decoration-color: currentColor;
 }
 
 main {
@@ -199,7 +213,16 @@ main {
   grid-template-columns: minmax(0, 1fr) minmax(230px, 300px);
   align-items: end;
   gap: clamp(28px, 4vw, 60px);
-  padding: 30px 0 22px;
+  padding: 38px 0 26px;
+}
+
+.intro-kicker {
+  margin: 0 0 10px;
+  color: var(--accent-dark);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  line-height: 1.2;
 }
 
 h1,
@@ -225,8 +248,11 @@ h1 {
 }
 
 .progress-summary {
-  padding: 12px 0 8px;
-  border-top: 2px solid var(--ink);
+  padding: 16px;
+  border: 1px solid var(--blue-line);
+  border-radius: 10px;
+  background: rgb(255 255 255 / 72%);
+  box-shadow: var(--shadow-sm);
   font-size: 12px;
 }
 
@@ -296,9 +322,9 @@ progress::-moz-progress-bar {
   gap: 14px;
   padding: 18px;
   border: 1px solid var(--blue-line);
-  border-radius: 8px;
+  border-radius: 10px;
   background: var(--blue);
-  box-shadow: 0 2px 4px rgb(24 48 58 / 12%);
+  box-shadow: var(--shadow-md);
 }
 
 .control-field {
@@ -316,30 +342,42 @@ progress::-moz-progress-bar {
 .control-field input,
 .control-field select {
   width: 100%;
-  min-height: 43px;
+  min-height: 44px;
   padding: 9px 11px;
   border: 1px solid var(--line-dark);
-  border-radius: 0;
+  border-radius: 6px;
   background: #fff;
   font-size: 14px;
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.control-field input:focus,
+.control-field select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgb(3 105 161 / 15%);
+  outline: none;
 }
 
 .button {
-  min-height: 43px;
+  min-height: 44px;
   padding: 10px 15px;
   border: 1px solid var(--ink);
-  border-radius: 0;
+  border-radius: 6px;
   font-size: 13px;
   font-weight: 700;
+  transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
 }
 
 .button-primary {
   background: var(--accent);
+  border-color: var(--accent);
   color: #fff;
 }
 
 .button-primary:hover {
   background: var(--accent-dark);
+  border-color: var(--accent-dark);
+  box-shadow: var(--shadow-sm);
 }
 
 .button-outline {
@@ -367,7 +405,9 @@ progress::-moz-progress-bar {
   margin-top: 18px;
   padding: 24px;
   border: 1px solid var(--blue-line);
+  border-radius: 10px;
   background: #fff;
+  box-shadow: var(--shadow-sm);
 }
 
 .builder-heading {
@@ -482,8 +522,9 @@ progress::-moz-progress-bar {
   max-height: calc(100vh - 32px);
   overflow: auto;
   border: 1px solid var(--blue-line);
-  border-radius: 8px;
+  border-radius: 10px;
   background: var(--blue-soft);
+  box-shadow: var(--shadow-sm);
 }
 
 .step-index details {
@@ -500,7 +541,8 @@ progress::-moz-progress-bar {
   list-style-position: inside;
 }
 
-.step-index summary span {
+.step-index > details > summary span,
+.chapter-group summary span {
   float: right;
   font-weight: 400;
   letter-spacing: 0;
@@ -517,32 +559,43 @@ progress::-moz-progress-bar {
 }
 
 .regulation-group {
-  margin-top: 12px;
+  margin-top: 6px;
+  border-top: 1px solid var(--line-dark);
 }
 
-.regulation-group h3 {
-  margin: 0;
-  padding: 10px 2px 7px;
-  border-top: 1px solid var(--line-dark);
+.regulation-group > summary {
+  padding: 7px 2px 6px;
+  cursor: pointer;
   font-size: 12px;
+  font-weight: 700;
   line-height: 1.35;
 }
 
-.regulation-group > p {
-  margin: 0 2px 6px;
+.regulation-count {
+  float: right;
+  color: var(--ink-soft);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.regulation-content > p {
+  margin: 0 2px 4px;
   color: var(--ink-soft);
   font-size: 11px;
 }
 
 .chapter-group {
-  margin: 6px 0 8px;
+  margin: 3px 0 5px;
 }
 
 .chapter-group summary {
-  padding: 6px 2px;
+  padding: 5px 2px;
   border: 0;
   color: var(--ink-soft);
   font-size: 11px;
+  line-height: 1.35;
   letter-spacing: 0.02em;
 }
 
@@ -552,7 +605,8 @@ progress::-moz-progress-bar {
   align-items: start;
   gap: 8px;
   width: 100%;
-  padding: 7px 5px;
+  min-height: 44px;
+  padding: 9px 7px;
   border: 0;
   border-bottom: 1px solid var(--line-soft);
   background: transparent;
@@ -560,6 +614,7 @@ progress::-moz-progress-bar {
   text-align: left;
   font-size: 12px;
   cursor: pointer;
+  transition: background-color 180ms ease, outline-color 180ms ease;
 }
 
 .step-link:hover {
@@ -614,9 +669,9 @@ progress::-moz-progress-bar {
   max-width: 860px;
   overflow: hidden;
   border: 1px solid var(--blue-line);
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--paper);
-  box-shadow: 0 2px 5px rgb(24 48 58 / 10%);
+  box-shadow: var(--shadow-md);
 }
 
 @media (max-width: 1100px) {
@@ -680,7 +735,7 @@ progress::-moz-progress-bar {
   margin-bottom: 18px;
   padding: 11px 13px;
   border: 1px solid var(--line);
-  border-radius: 6px;
+  border-radius: 8px;
   background: #f1f9fc;
   font-size: 12px;
 }
@@ -1146,11 +1201,16 @@ progress::-moz-progress-bar {
 
   .step-index {
     position: static;
-    max-height: none;
+    max-height: min(55vh, 440px);
+    overflow: auto;
   }
 
-  .step-index summary {
+  .step-index > details > summary {
     display: list-item;
+    position: sticky;
+    z-index: 2;
+    top: 0;
+    background: var(--blue-soft);
   }
 
   .step-index details:not([open]) .index-content {
@@ -1184,6 +1244,12 @@ progress::-moz-progress-bar {
   .top-nav {
     justify-content: flex-start;
     margin-top: 12px;
+  }
+
+  .top-nav a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
   }
 
   main {
@@ -1259,6 +1325,14 @@ progress::-moz-progress-bar {
   .control-strip .search-field,
   .control-strip > .button {
     grid-column: auto;
+  }
+}
+
+@media (pointer: coarse) and (max-width: 700px) {
+  .regulation-group > summary,
+  .chapter-group summary,
+  .step-link {
+    min-height: 44px;
   }
 }
 

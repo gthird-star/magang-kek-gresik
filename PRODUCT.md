@@ -24,7 +24,7 @@ Learning is organized around both the regulation's complete structure and option
 
 ## Operating Context
 
-The source material consists of PP No. 40 Tahun 2021, PP No. 48 Tahun 2025, and PP No. 71 Tahun 2021 PDF files in the project root. The site should be usable locally and suitable for static hosting.
+The source material consists of PP No. 40 Tahun 2021, PP No. 28 Tahun 2025, and PP No. 71 Tahun 2021 PDF files in the project root. The site should be usable locally and suitable for static hosting.
 
 ## Capabilities and Constraints
 
@@ -36,7 +36,7 @@ The source material consists of PP No. 40 Tahun 2021, PP No. 48 Tahun 2025, and 
 ## Evidence on Hand
 
 - `PP_40_2021.pdf`
-- `PP_48_2025.pdf`
+- `PP_28_2025.pdf`
 - `PP_71_2021.pdf`
 - `README.md`, which describes the learning context and Waspal focus.
 

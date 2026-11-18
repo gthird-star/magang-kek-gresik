@@ -6,7 +6,7 @@ Website belajar untuk peserta magang lintas divisi. Mulai dari gambaran umum sel
 
 - **PP No. 40 Tahun 2021** — Penyelenggaraan Kawasan Ekonomi Khusus.
 - **PP No. 71 Tahun 2021** — Kawasan Ekonomi Khusus Gresik.
-- **PP No. 48 Tahun 2025** — Penertiban Kawasan dan Tanah Telantar.
+- **PP No. 28 Tahun 2025** — Penyelenggaraan Perizinan Berusaha Berbasis Risiko.
 
 PDF asli di folder ini menjadi rujukan utama. Teks website diekstrak dari PDF dan mungkin mengandung kesalahan ekstraksi; setiap pasal menyediakan tautan ke halaman PDF sumber.
 
