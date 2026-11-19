@@ -12,8 +12,9 @@ Upgrade ini mencakup:
 2. Latihan ingatan dan kuis.
 3. Hubungan antar-pasal dan antar-PP.
 4. Tag topik dan penyaringan.
+5. Jalur belajar khusus materi presentasi PPT (Galib) mencakup PP 40/2021 (Bab XII–XVIII) dan PP 28/2025 (Bab XI–XIV).
 
-**Tidak termasuk:** pembuatan jalur belajar baru per divisi atau perubahan jalur Waspal. Jalur yang sudah ada tetap berstatus draf.
+Jalur bawaan Waspal dan Jalur Presentasi Galib disediakan sebagai panduan belajar terfokus. Jalur khusus divisi lain tetap dapat dibuat sendiri oleh pengguna.
 
 ## Prinsip dan batasan
 
@@ -153,6 +154,42 @@ Tambahkan daftar topik terkurasi, misalnya perizinan, kelembagaan, ketenagakerja
 - Setiap hasil dapat dibuka sebagai pasal dan memiliki tautan sumber.
 - Topik kosong atau hasil pencarian kosong memiliki pesan yang membantu.
 
+## Tahap 5 — Jalur Belajar Presentasi PPT (Galib)
+
+### Tujuan dan Lingkup Materi
+
+Menyediakan jalur belajar terfokus dan sarana penyiapan materi slide presentasi (PowerPoint) untuk peserta magang Galib yang mencakup bab-bab ketentuan strategis lintas dua peraturan:
+
+1. **PP No. 40 Tahun 2021 (Penyelenggaraan KEK)**:
+   - **BAB XII:** Fasilitas dan Kemudahan Keimigrasian (Pasal 125–137)
+   - **BAB XIII:** Fasilitas dan Kemudahan Pertanahan dan Tata Ruang (Pasal 138–145)
+   - **BAB XIV:** Fasilitas dan Kemudahan Perizinan Berusaha (Pasal 146–155)
+   - **BAB XV:** Fasilitas dan Kemudahan Lainnya (Pasal 156–158)
+   - **BAB XVI:** Ketentuan Lain-Lain (Pasal 159)
+   - **BAB XVII:** Ketentuan Peralihan (Pasal 160–162)
+   - **BAB XVIII:** Ketentuan Penutup (Pasal 163–166)
+   *(Total: 42 pasal)*
+
+2. **PP No. 28 Tahun 2025 (Penyelenggaraan Perizinan Berusaha Berbasis Risiko)**:
+   - **BAB XI:** Sanksi administratif (mulai Pasal 412 sampai akhir bab)
+   - **BAB XII:** Ketentuan Lain-Lain (Pasal 544–546)
+   - **BAB XIII:** Ketentuan Peralihan (Pasal 547–548)
+   - **BAB XIV:** Ketentuan Penutup (Pasal 549–552)
+   *(Total: 130 pasal)*
+
+### Pengalaman Pengguna
+
+- **Jalur Preset Bawaan:** Pengguna dapat memilih jalur **“Materi PPT · Galib”** langsung dari menu utama Jalur Belajar maupun filter jalur aktif.
+- **Isolasi 172 Pasal:** Begitu jalur dipilih, pembaca dan daftar isi otomatis menyaring hanya pasal-pasal tugas presentasi tersebut.
+- **Bahan Slide Siap Pakai:** Pada card ringkasan belajar disediakan tombol **“Salin Poin Slide PPT”** yang menyalin intisari dan poin-poin penting dalam format siap tempel (*paste*) ke slide presentasi.
+- **Lencana Materi PPT:** Setiap pasal dalam jalur ini ditandai dengan lencana khusus bahan presentasi agar mudah dikenali.
+
+### Kriteria selesai
+
+- Jalur “Materi PPT · Galib” dapat dipilih dan berfungsi menyaring 172 pasal dengan akurat.
+- Fitur salin poin slide berjalan lancar di browser tanpa memerlukan server.
+- Progres pengerjaan pasal dan kuis pada jalur Galib tercatat mandiri di penyimpanan lokal.
+
 ## Urutan pelaksanaan
 
 1. **Tahap 0:** siapkan struktur data terpisah dan validasinya.
@@ -160,7 +197,8 @@ Tambahkan daftar topik terkurasi, misalnya perizinan, kelembagaan, ketenagakerja
 3. **Tahap 2:** tambahkan kuis pada pasal yang sudah memiliki materi terverifikasi.
 4. **Tahap 3:** tampilkan rujukan eksplisit, lalu hubungan topik yang sudah dikurasi.
 5. **Tahap 4:** tambahkan tag topik dan filter pencarian.
-6. Perluas materi secara bertahap setelah format dan pemeriksaan sumber berjalan baik.
+6. **Tahap 5:** tambahkan jalur belajar khusus materi presentasi PPT Galib beserta fitur bantuan salin slide.
+7. Perluas materi secara bertahap setelah format dan pemeriksaan sumber berjalan baik.
 
 ## Pengujian sebelum rilis
 

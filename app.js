@@ -53,6 +53,7 @@ const elements = {
 
 let regulations = [];
 let articles = [];
+let galibPptArticles = new Set();
 let learningContent = { version: "1.0.0", topics: [], articles: {} };
 let currentArticle = null;
 let articleViewMode = "structured";
@@ -187,6 +188,45 @@ function loadArticles(data) {
   });
 
   if (!articles.length) throw new Error("Tidak ada pasal yang dapat ditampilkan.");
+
+  const galibKeys = new Set();
+  let inP28Bab11From412 = false;
+  for (const article of articles) {
+    const regId = article.regulationId;
+    const ch = article.chapter || "";
+    if (regId === "pp-40-2021") {
+      if (
+        ch.startsWith("BAB XII") ||
+        ch.startsWith("BAB XIII") ||
+        ch.startsWith("BAB XIV") ||
+        ch.startsWith("BAB XV") ||
+        ch.startsWith("BAB XVI") ||
+        ch.startsWith("BAB XVII") ||
+        ch.startsWith("BAB XVIII")
+      ) {
+        galibKeys.add(articleKey(article));
+      }
+    } else if (regId === "pp-28-2025") {
+      if (ch.startsWith("BAB XI")) {
+        if (article.number === "Pasal 412") {
+          inP28Bab11From412 = true;
+        }
+        if (inP28Bab11From412) {
+          galibKeys.add(articleKey(article));
+        }
+      } else {
+        inP28Bab11From412 = false;
+        if (
+          ch.startsWith("BAB XII") ||
+          ch.startsWith("BAB XIII") ||
+          ch.startsWith("BAB XIV")
+        ) {
+          galibKeys.add(articleKey(article));
+        }
+      }
+    }
+  }
+  galibPptArticles = galibKeys;
 }
 
 function fillRegulationFilter() {
@@ -215,7 +255,8 @@ function fillTrackFilter() {
   const selected = state.activeTrack || "all";
   const options = [
     '<option value="all">Gambaran umum</option>',
-    '<option value="waspal">Waspal · draf</option>'
+    '<option value="waspal">Waspal · draf</option>',
+    '<option value="galib">Materi PPT · Galib</option>'
   ];
   for (const track of state.customTracks) {
     options.push(`<option value="${escapeHtml(track.id)}">${escapeHtml(track.name)}</option>`);
@@ -237,7 +278,8 @@ function getVisibleArticles() {
     if (regulationId !== "all" && article.regulationId !== regulationId) return false;
     const key = articleKey(article);
     if (trackId === "waspal" && !WASPAL_ARTICLES.has(key)) return false;
-    if (trackId !== "all" && trackId !== "waspal") {
+    if (trackId === "galib" && !galibPptArticles.has(key)) return false;
+    if (trackId !== "all" && trackId !== "waspal" && trackId !== "galib") {
       const track = state.customTracks.find((item) => item.id === trackId);
       if (!track || !track.articles.includes(key)) return false;
     }
@@ -693,12 +735,20 @@ function renderLearningSummary(key, article, regulation) {
     </div>
   `;
 
+  const copyPptBtn = `
+    <button class="ppt-copy-btn" type="button" data-copy-ppt="${escapeHtml(key)}" title="Salin intisari dan poin untuk ditempel ke slide presentasi">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span>Salin Poin Slide PPT</span>
+    </button>
+  `;
+
   return `
     <section class="learning-summary-sheet" aria-labelledby="summary-title-${escapeHtml(article.number)}">
       <div class="summary-header">
         <div class="summary-badge-group">
           <span class="learning-badge" id="summary-title-${escapeHtml(article.number)}">Ringkasan belajar &mdash; bukan teks resmi</span>
           <span class="status-badge ${statusClass}">${escapeHtml(statusLabel)}</span>
+          ${copyPptBtn}
         </div>
         ${topicsHtml}
       </div>
@@ -848,14 +898,16 @@ function renderReader() {
     : "";
 
   const itemContent = learningContent.articles?.[currentKey];
+  const isGalibPpt = galibPptArticles.has(currentKey);
   const headerTopics = (itemContent && Array.isArray(itemContent.topics) && itemContent.topics.length)
     ? `<div class="summary-topics-group">
+        ${isGalibPpt ? '<span class="topic-badge ppt-tag">Bahan PPT Galib</span>' : ""}
         ${itemContent.topics.map((tid) => {
           const tObj = learningContent.topics?.find((t) => t.id === tid);
           return tObj ? `<span class="topic-badge">${escapeHtml(tObj.label)}</span>` : "";
         }).join("")}
       </div>`
-    : "";
+    : (isGalibPpt ? `<div class="summary-topics-group"><span class="topic-badge ppt-tag">Bahan PPT Galib</span></div>` : "");
 
   elements.reader.innerHTML = `
     <article class="lesson">
@@ -985,6 +1037,12 @@ function renderTrackCards() {
       description: "Jalur awal untuk pendalaman. Cocokkan pilihan pasalnya dengan pembimbing.",
       count: articles.filter((article) => WASPAL_ARTICLES.has(articleKey(article))).length
     },
+    {
+      id: "galib",
+      title: "Materi PPT · Galib",
+      description: "Jalur fokus presentasi: Fasilitas PP 40 (Bab XII–XVIII) dan Sanksi PP 28 (Bab XI–XIV).",
+      count: articles.filter((article) => galibPptArticles.has(articleKey(article))).length
+    },
     ...state.customTracks.map((track) => ({
       id: track.id,
       title: track.name,
@@ -1025,6 +1083,8 @@ function renderRouteNote() {
   const trackId = elements.trackFilter.value;
   if (trackId === "waspal") {
     elements.routeNote.textContent = "Jalur Waspal ini draf awal; cocokkan daftar pasalnya dengan pembimbing.";
+  } else if (trackId === "galib") {
+    elements.routeNote.textContent = "Jalur Materi PPT Galib: memuat 172 pasal pilihan dari PP 40/2021 dan PP 28/2025.";
   } else if (trackId !== "all") {
     const track = state.customTracks.find((item) => item.id === trackId);
     elements.routeNote.textContent = track
@@ -1192,6 +1252,43 @@ function handleArticleAction(event) {
     return;
   }
 
+  const copyPptBtn = target.closest("[data-copy-ppt]");
+  if (copyPptBtn) {
+    const key = copyPptBtn.dataset.copyPpt;
+    const artData = learningContent.articles?.[key];
+    const artObj = articles.find((a) => articleKey(a) === key);
+    const regObj = artObj ? getRegulation(artObj) : null;
+    const regTitle = regObj ? formatRegulation(regObj) : "";
+
+    let textToCopy = `[Slide: ${artObj ? artObj.number : key} - ${regTitle}]\n`;
+    if (artData?.summary) {
+      textToCopy += `Intisari:\n${artData.summary.core}\n\n`;
+      if (artData.summary.keyPoints?.length) {
+        textToCopy += `Poin-Poin Utama:\n${artData.summary.keyPoints.map((p) => `• ${p}`).join("\n")}\n\n`;
+      }
+      if (artData.summary.keyTerms?.length) {
+        textToCopy += `Istilah Kunci:\n${artData.summary.keyTerms.map((t) => `- ${t.term}: ${t.definition}`).join("\n")}\n\n`;
+      }
+      textToCopy += `Rujukan Resmi: ${artObj ? artObj.number : ""} (${regTitle}, Halaman ${artData.summary.sourcePage || (artObj ? artObj.page : "")})`;
+    } else if (artObj) {
+      textToCopy += artObj.text;
+    }
+
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(textToCopy).then(() => {
+        const span = copyPptBtn.querySelector("span");
+        if (span) {
+          const originalText = span.textContent;
+          span.textContent = "✓ Poin Slide Tersalin!";
+          setTimeout(() => { span.textContent = originalText; }, 2000);
+        }
+      }).catch(() => {
+        showStatus("Gagal menyalin poin slide ke clipboard.");
+      });
+    }
+    return;
+  }
+
   if (target.id === "complete-toggle" && currentArticle) {
     const key = articleKey(currentArticle);
     state.completed = state.completed.includes(key)
@@ -1313,6 +1410,7 @@ elements.trackCards.addEventListener("click", (event) => {
   const trackId = button.dataset.openTrack;
   const hasTrack = trackId === "all"
     || trackId === "waspal"
+    || trackId === "galib"
     || state.customTracks.some((track) => track.id === trackId);
   if (!hasTrack) return;
   elements.trackFilter.value = trackId;
