@@ -2,8 +2,6 @@ import json
 import re
 from pathlib import Path
 
-import pdfplumber
-
 
 ROOT = Path(__file__).resolve().parent.parent
 OUTPUT = ROOT / "data" / "regulations.json"
@@ -375,6 +373,8 @@ def split_sections(pages):
 
 
 def extract_regulation(metadata):
+    import pdfplumber
+
     path = ROOT / metadata["file"]
     with pdfplumber.open(path) as pdf:
         pages = [page.extract_text() or "" for page in pdf.pages]

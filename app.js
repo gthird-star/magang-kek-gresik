@@ -30,6 +30,8 @@ const elements = {
   lastRead: document.querySelector("#last-read"),
   completedArticles: document.querySelector("#completed-articles"),
   regulationFilter: document.querySelector("#regulation-filter"),
+  topicFilter: document.querySelector("#topic-filter"),
+  progressQuizCount: document.querySelector("#progress-quiz-count"),
   trackFilter: document.querySelector("#track-filter"),
   search: document.querySelector("#article-search"),
   routeNote: document.querySelector("#route-note"),
@@ -51,6 +53,7 @@ const elements = {
 
 let regulations = [];
 let articles = [];
+let learningContent = { version: "1.0.0", topics: [], articles: {} };
 let currentArticle = null;
 let articleViewMode = "structured";
 let builderSelection = new Set();
@@ -62,6 +65,7 @@ function emptyState() {
   return {
     completed: [],
     selfChecked: [],
+    quizAnswers: {},
     lastArticle: "",
     activeTrack: "all",
     customTracks: []
@@ -79,6 +83,7 @@ function readState() {
       ...parsed,
       completed: Array.isArray(parsed.completed) ? parsed.completed : [],
       selfChecked: Array.isArray(parsed.selfChecked) ? parsed.selfChecked : [],
+      quizAnswers: (parsed.quizAnswers && typeof parsed.quizAnswers === "object") ? parsed.quizAnswers : {},
       customTracks: Array.isArray(parsed.customTracks) ? parsed.customTracks : []
     };
   } catch (error) {
@@ -129,6 +134,20 @@ function getRegulation(article) {
 
 function searchableText(article) {
   const regulation = getRegulation(article);
+  const key = articleKey(article);
+  const itemContent = learningContent.articles?.[key];
+  let learningKeywords = "";
+  if (itemContent) {
+    const topicNames = (itemContent.topics || [])
+      .map((tid) => learningContent.topics?.find((t) => t.id === tid)?.label || "")
+      .join(" ");
+    const core = itemContent.summary?.core || "";
+    const terms = (itemContent.summary?.keyTerms || [])
+      .map((t) => `${t.term} ${t.definition}`)
+      .join(" ");
+    learningKeywords = `${topicNames} ${core} ${terms}`;
+  }
+
   return [
     regulation?.title,
     `PP ${regulation?.number} ${regulation?.year}`,
@@ -136,7 +155,8 @@ function searchableText(article) {
     article.chapter,
     article.part,
     article.text,
-    article.explanation
+    article.explanation,
+    learningKeywords
   ].filter(Boolean).join(" ").toLocaleLowerCase("id");
 }
 
@@ -179,6 +199,18 @@ function fillRegulationFilter() {
   elements.regulationFilter.innerHTML = options.join("");
 }
 
+function fillTopicFilter() {
+  if (!elements.topicFilter) return;
+  const topics = learningContent.topics || [];
+  const options = ['<option value="all">Semua topik</option>'];
+  for (const topic of topics) {
+    options.push(
+      `<option value="${escapeHtml(topic.id)}">${escapeHtml(topic.label)}</option>`
+    );
+  }
+  elements.topicFilter.innerHTML = options.join("");
+}
+
 function fillTrackFilter() {
   const selected = state.activeTrack || "all";
   const options = [
@@ -198,6 +230,7 @@ function fillTrackFilter() {
 function getVisibleArticles() {
   const regulationId = elements.regulationFilter.value;
   const trackId = elements.trackFilter.value;
+  const topicId = elements.topicFilter ? elements.topicFilter.value : "all";
   const query = elements.search.value.trim().toLocaleLowerCase("id");
 
   return articles.filter((article) => {
@@ -207,6 +240,12 @@ function getVisibleArticles() {
     if (trackId !== "all" && trackId !== "waspal") {
       const track = state.customTracks.find((item) => item.id === trackId);
       if (!track || !track.articles.includes(key)) return false;
+    }
+    if (topicId !== "all") {
+      const itemContent = learningContent.articles?.[key];
+      if (!itemContent || !Array.isArray(itemContent.topics) || !itemContent.topics.includes(topicId)) {
+        return false;
+      }
     }
     return !query || searchableText(article).includes(query);
   });
@@ -268,10 +307,20 @@ function renderNavigation() {
                     const key = articleKey(article);
                     const selected = currentArticle && articleKey(currentArticle) === key;
                     const completed = state.completed.includes(key);
+                    const itemData = learningContent.articles?.[key];
+                    const topicBadges = (itemData && Array.isArray(itemData.topics) && itemData.topics.length)
+                      ? `<div class="article-item-tags">${itemData.topics.map((tId) => {
+                          const topObj = learningContent.topics?.find((t) => t.id === tId);
+                          return topObj ? `<span class="article-list-tag">${escapeHtml(topObj.label.split(" ")[0])}</span>` : "";
+                        }).join("")}</div>`
+                      : "";
                     return `
                       <button class="step-link" type="button" data-article-key="${escapeHtml(key)}" aria-current="${selected ? "true" : "false"}">
                         <span class="step-number">${escapeHtml(article.number.replace("Pasal ", ""))}</span>
-                        <span class="step-label">${escapeHtml(article.number)}</span>
+                        <div class="step-label">
+                          <span>${escapeHtml(article.number)}</span>
+                          ${topicBadges}
+                        </div>
                         ${completed ? '<span class="step-complete">Selesai</span>' : ""}
                       </button>
                     `;
@@ -585,6 +634,189 @@ function toggleReferencePreview(button) {
   preview.querySelector("#reference-preview-close").focus({ preventScroll: true });
 }
 
+function renderLearningSummary(key, article, regulation) {
+  const itemContent = learningContent.articles?.[key];
+  if (!itemContent || !itemContent.summary) {
+    return `
+      <section class="learning-summary-sheet" aria-labelledby="summary-title-${escapeHtml(article.number)}">
+        <div class="summary-header">
+          <div class="summary-badge-group">
+            <span class="learning-badge" id="summary-title-${escapeHtml(article.number)}">Ringkasan belajar &mdash; bukan teks resmi</span>
+          </div>
+        </div>
+        <div class="summary-empty">
+          <strong>Ringkasan belum tersedia</strong>
+          <p class="summary-empty-note">Materi pendalaman dan ringkasan terverifikasi untuk pasal ini sedang dalam proses penelaahan dokumen resmi.</p>
+        </div>
+      </section>
+    `;
+  }
+
+  const { summary, status, topics = [] } = itemContent;
+  const statusClass = status === "reviewed" ? "reviewed" : "draft";
+  const statusLabel = status === "reviewed" ? "Ditinjau" : "Draf";
+
+  const topicsHtml = topics.length
+    ? `<div class="summary-topics-group">
+        ${topics.map((tid) => {
+          const tObj = learningContent.topics?.find((t) => t.id === tid);
+          return tObj ? `<span class="topic-badge">${escapeHtml(tObj.label)}</span>` : "";
+        }).join("")}
+      </div>`
+    : "";
+
+  const pointsHtml = Array.isArray(summary.keyPoints) && summary.keyPoints.length
+    ? `<span class="summary-section-title">Hal yang perlu dipahami:</span>
+       <ul class="summary-points">
+         ${summary.keyPoints.map((point) => `<li>${escapeHtml(point)}</li>`).join("")}
+       </ul>`
+    : "";
+
+  const termsHtml = Array.isArray(summary.keyTerms) && summary.keyTerms.length
+    ? `<span class="summary-section-title">Istilah penting:</span>
+       <div class="summary-terms">
+         ${summary.keyTerms.map((term) => `
+           <div class="summary-term-item">
+             <strong>${escapeHtml(term.term)}:</strong>
+             <span>${escapeHtml(term.definition)}</span>
+           </div>
+         `).join("")}
+       </div>`
+    : "";
+
+  const sourcePage = Number(summary.sourcePage || article.page);
+  const pdfUrl = makePdfUrl(regulation, sourcePage);
+  const sourceFooter = `
+    <div class="summary-source-footer">
+      <span>Intisari terhubung ke halaman ${sourcePage} dari PDF sumber</span>
+      <a href="${escapeHtml(pdfUrl)}" target="_blank" rel="noopener">Buka halaman PDF</a>
+    </div>
+  `;
+
+  return `
+    <section class="learning-summary-sheet" aria-labelledby="summary-title-${escapeHtml(article.number)}">
+      <div class="summary-header">
+        <div class="summary-badge-group">
+          <span class="learning-badge" id="summary-title-${escapeHtml(article.number)}">Ringkasan belajar &mdash; bukan teks resmi</span>
+          <span class="status-badge ${statusClass}">${escapeHtml(statusLabel)}</span>
+        </div>
+        ${topicsHtml}
+      </div>
+      <p class="summary-core">${escapeHtml(summary.core)}</p>
+      ${pointsHtml}
+      ${termsHtml}
+      ${sourceFooter}
+    </section>
+  `;
+}
+
+function renderRelatedReferences(key) {
+  const itemContent = learningContent.articles?.[key];
+  if (!itemContent || !Array.isArray(itemContent.relations) || !itemContent.relations.length) {
+    return "";
+  }
+
+  const cards = itemContent.relations.map((rel) => {
+    const targetReg = regulations.find((r) => r.id === rel.targetRegulationId);
+    const regLabel = targetReg ? formatRegulation(targetReg) : rel.targetRegulationId;
+    const targetKey = `${rel.targetRegulationId}|${rel.targetArticle}`;
+    const typeClass = rel.relationType === "explicit_reference" ? "explicit" : "topic";
+    const typeLabel = rel.relationType === "explicit_reference" ? "Rujukan Eksplisit" : "Keterkaitan Topik";
+    const targetPage = rel.sourcePage;
+    const pdfUrl = targetReg && targetPage ? makePdfUrl(targetReg, targetPage) : "";
+
+    return `
+      <div class="relation-card">
+        <div class="relation-header">
+          <button class="relation-target-btn" type="button" data-open-article="${escapeHtml(targetKey)}" aria-label="Buka ${escapeHtml(regLabel)} ${escapeHtml(rel.targetArticle)}">
+            <span>${escapeHtml(regLabel)} &middot; ${escapeHtml(rel.targetArticle)} &rarr;</span>
+          </button>
+          <span class="relation-type-badge ${typeClass}">${typeLabel}</span>
+        </div>
+        <p class="relation-note">${escapeHtml(rel.note)}</p>
+        <div class="relation-footer">
+          <span>${rel.relationLabel ? escapeHtml(rel.relationLabel) : "Rujukan pasal"}</span>
+          ${pdfUrl ? `<a href="${escapeHtml(pdfUrl)}" target="_blank" rel="noopener">PDF Hal. ${Number(targetPage)}</a>` : ""}
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  return `
+    <section class="related-references-sheet" aria-labelledby="references-title">
+      <h3 id="references-title">Rujukan Terkait &amp; Lintas Regulasi</h3>
+      <p class="references-note">Keterkaitan ketentuan ini dengan pasal lain yang dapat diklik langsung untuk membuka materinya.</p>
+      <div class="relation-grid">${cards}</div>
+    </section>
+  `;
+}
+
+function renderQuizSheet(key) {
+  const itemContent = learningContent.articles?.[key];
+  if (!itemContent || !Array.isArray(itemContent.quiz) || !itemContent.quiz.length) {
+    return "";
+  }
+
+  const quizzes = itemContent.quiz;
+  const answeredCount = quizzes.filter((q) => state.quizAnswers && state.quizAnswers[q.id] !== undefined).length;
+
+  const quizCards = quizzes.map((quiz, qIdx) => {
+    const selectedOpt = state.quizAnswers ? state.quizAnswers[quiz.id] : undefined;
+    const isAnswered = selectedOpt !== undefined;
+    const isCorrect = isAnswered && selectedOpt === quiz.correctIndex;
+
+    let feedbackHtml = "";
+    if (isAnswered) {
+      feedbackHtml = `
+        <div class="quiz-feedback ${isCorrect ? "correct" : "incorrect"}" role="status">
+          <div class="quiz-feedback-title">
+            <span>${isCorrect ? "Jawaban Anda Benar! &#10003;" : "Jawaban Belum Tepat"}</span>
+            <button class="quiz-retry-btn" type="button" data-quiz-retry="${escapeHtml(quiz.id)}">Ulangi soal</button>
+          </div>
+          <p>${escapeHtml(quiz.explanation)}</p>
+          <span class="quiz-feedback-source">Sumber: ${escapeHtml(quiz.sourceReference)}</span>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="quiz-card" data-quiz-id="${escapeHtml(quiz.id)}">
+        <div class="quiz-card-head">
+          <span class="quiz-q-num">${qIdx + 1}</span>
+          <p class="quiz-question-text">${escapeHtml(quiz.question)}</p>
+        </div>
+        <div class="quiz-options">
+          ${quiz.options.map((opt, optIdx) => {
+            const isSelected = selectedOpt === optIdx;
+            return `
+              <button class="quiz-option-btn ${isSelected ? "selected" : ""}" 
+                      type="button" 
+                      data-quiz-id="${escapeHtml(quiz.id)}" 
+                      data-quiz-option="${optIdx}" 
+                      aria-pressed="${isSelected}">
+                <span class="quiz-option-indicator" aria-hidden="true"></span>
+                <span>${escapeHtml(opt)}</span>
+              </button>
+            `;
+          }).join("")}
+        </div>
+        ${feedbackHtml}
+      </div>
+    `;
+  }).join("");
+
+  return `
+    <section class="quiz-sheet" aria-labelledby="quiz-title">
+      <div class="quiz-heading">
+        <h3 id="quiz-title">Kuis Pemahaman Cepat</h3>
+        <span class="quiz-meta-badge">${answeredCount} dari ${quizzes.length} Dijawab</span>
+      </div>
+      <p class="quiz-intro">Uji pemahaman dasar dari bunyi pasal resmi. Hasil kuis tersimpan di perangkat ini dan bukan ukuran kelayakan hukum resmi.</p>
+      <div class="quiz-list">${quizCards}</div>
+    </section>
+  `;
+}
+
 function renderReader() {
   const visible = getVisibleArticles();
   if (!currentArticle || !visible.some((article) => articleKey(article) === articleKey(currentArticle))) {
@@ -600,11 +832,12 @@ function renderReader() {
     return;
   }
 
+  const currentKey = articleKey(currentArticle);
   const regulation = getRegulation(currentArticle);
-  const position = visible.findIndex((article) => articleKey(article) === articleKey(currentArticle));
+  const position = visible.findIndex((article) => articleKey(article) === currentKey);
   const previousDisabled = position <= 0;
   const nextDisabled = position < 0 || position >= visible.length - 1;
-  const isComplete = state.completed.includes(articleKey(currentArticle));
+  const isComplete = state.completed.includes(currentKey);
   const hasExplanation = Boolean(currentArticle.explanation);
   const pdfUrl = makePdfUrl(regulation, currentArticle.page);
   const fullArticle = escapeHtml(currentArticle.text);
@@ -614,12 +847,23 @@ function renderReader() {
     ? `<details class="general-explanation"><summary>Baca penjelasan umum ${escapeHtml(formatRegulation(regulation))}</summary><p class="official-text">${escapeHtml(regulation.generalExplanation)}</p></details>`
     : "";
 
+  const itemContent = learningContent.articles?.[currentKey];
+  const headerTopics = (itemContent && Array.isArray(itemContent.topics) && itemContent.topics.length)
+    ? `<div class="summary-topics-group">
+        ${itemContent.topics.map((tid) => {
+          const tObj = learningContent.topics?.find((t) => t.id === tid);
+          return tObj ? `<span class="topic-badge">${escapeHtml(tObj.label)}</span>` : "";
+        }).join("")}
+      </div>`
+    : "";
+
   elements.reader.innerHTML = `
     <article class="lesson">
       <header class="lesson-head">
         <div class="lesson-meta">
           <span class="step-chip"><span>LANGKAH</span> ${position + 1} / ${visible.length}</span>
           <span>${escapeHtml(formatRegulation(regulation))}</span>
+          ${headerTopics}
         </div>
         <h2>${escapeHtml(currentArticle.number)}</h2>
         <p class="lesson-chapter">${escapeHtml(chapter)}</p>
@@ -629,6 +873,7 @@ function renderReader() {
           <div><strong>Bunyi resmi</strong><span>Halaman ${Number(currentArticle.page)} dari PDF</span></div>
           <a href="${escapeHtml(pdfUrl)}" target="_blank" rel="noopener">Buka PDF asli</a>
         </div>
+        ${renderLearningSummary(currentKey, currentArticle, regulation)}
         <section aria-labelledby="official-title">
           <div class="official-heading">
             <h3 id="official-title">Teks pasal</h3>
@@ -649,10 +894,12 @@ function renderReader() {
           </details>
         ` : ""}
         ${regulationIntro}
+        ${renderRelatedReferences(currentKey)}
+        ${renderQuizSheet(currentKey)}
         <section class="recall-sheet" aria-labelledby="recall-title">
           <div class="recall-heading">
-            <h3 id="recall-title">Latihan ingatan</h3>
-            <span>${state.selfChecked.includes(articleKey(currentArticle)) ? "SUDAH DICEK" : "TANPA NILAI OTOMATIS"}</span>
+            <h3 id="recall-title">Latihan ingatan mandiri</h3>
+            <span>${state.selfChecked.includes(currentKey) ? "SUDAH DICEK" : "TANPA NILAI OTOMATIS"}</span>
           </div>
           <p>Tanpa melihat teks di atas, coba jelaskan inti ${escapeHtml(currentArticle.number)} dengan kata-katamu sendiri. Jawabanmu tidak dikirim atau disimpan.</p>
           <label class="visually-hidden" for="recall-answer">Catatan jawaban latihan ingatan</label>
@@ -692,6 +939,9 @@ function renderProgress() {
     : "Belum ada pasal untuk ditampilkan.";
   elements.progressReadCount.textContent = String(completed);
   elements.progressCheckedCount.textContent = String(selfChecked);
+  if (elements.progressQuizCount) {
+    elements.progressQuizCount.textContent = String(Object.keys(state.quizAnswers || {}).length);
+  }
   elements.progressTrackCount.textContent = String(state.customTracks.length);
   elements.homeProgressLabel.textContent = progressText;
   elements.homeProgressBar.max = Math.max(total, 1);
@@ -918,6 +1168,30 @@ function handleArticleAction(event) {
     return;
   }
 
+  const quizOptionBtn = target.closest("[data-quiz-id][data-quiz-option]");
+  if (quizOptionBtn) {
+    const quizId = quizOptionBtn.dataset.quizId;
+    const optionIdx = parseInt(quizOptionBtn.dataset.quizOption, 10);
+    state.quizAnswers = state.quizAnswers || {};
+    state.quizAnswers[quizId] = optionIdx;
+    saveState();
+    renderReader();
+    renderProgress();
+    return;
+  }
+
+  const quizRetryBtn = target.closest("[data-quiz-retry]");
+  if (quizRetryBtn) {
+    const quizId = quizRetryBtn.dataset.quizRetry;
+    if (state.quizAnswers && state.quizAnswers[quizId] !== undefined) {
+      delete state.quizAnswers[quizId];
+      saveState();
+      renderReader();
+      renderProgress();
+    }
+    return;
+  }
+
   if (target.id === "complete-toggle" && currentArticle) {
     const key = articleKey(currentArticle);
     state.completed = state.completed.includes(key)
@@ -989,14 +1263,25 @@ function handleTrackSubmit(event) {
 
 async function start() {
   try {
-    const response = await fetch("data/regulations.json");
-    if (!response.ok) {
-      throw new Error(`data/regulations.json tidak dapat dimuat (HTTP ${response.status}).`);
+    const [regResponse, learningResponse] = await Promise.all([
+      fetch("data/regulations.json?v=2"),
+      fetch("data/learning-content.json?v=2").catch(() => null)
+    ]);
+    if (!regResponse.ok) {
+      throw new Error(`data/regulations.json tidak dapat dimuat (HTTP ${regResponse.status}).`);
     }
-    const data = await response.json();
+    const data = await regResponse.json();
+    if (learningResponse && learningResponse.ok) {
+      try {
+        learningContent = await learningResponse.json();
+      } catch (error) {
+        console.warn("learning-content.json tidak dapat diproses:", error);
+      }
+    }
     loadArticles(data);
     elements.indexDetails.open = !window.matchMedia("(max-width: 700px)").matches;
     fillRegulationFilter();
+    fillTopicFilter();
     fillTrackFilter();
     currentArticle = articles.find((article) => articleKey(article) === state.lastArticle) || articles[0];
     if (!window.location.hash) {
@@ -1087,6 +1372,12 @@ elements.regulationFilter.addEventListener("change", () => {
   currentArticle = null;
   renderAll();
 });
+if (elements.topicFilter) {
+  elements.topicFilter.addEventListener("change", () => {
+    currentArticle = null;
+    renderAll();
+  });
+}
 elements.trackFilter.addEventListener("change", () => {
   state.activeTrack = elements.trackFilter.value;
   currentArticle = null;

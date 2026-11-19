@@ -7,8 +7,8 @@
   <meta name="description" content="Website belajar peraturan KEK Gresik dari dokumen sumber resmi.">
   <title>Belajar Peraturan KEK Gresik</title>
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
-  <link rel="stylesheet" href="styles.css?v=10">
-  <script src="app.js?v=6" defer></script>
+  <link rel="stylesheet" href="styles.css?v=12">
+  <script src="app.js?v=8" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#daftar-regulasi">Langsung ke materi</a>
@@ -129,6 +129,7 @@
           <div class="progress-facts">
             <p><strong id="progress-read-count">0</strong><span>Pasal selesai</span></p>
             <p><strong id="progress-checked-count">0</strong><span>Latihan dicek</span></p>
+            <p><strong id="progress-quiz-count">0</strong><span>Kuis dijawab</span></p>
             <p><strong id="progress-track-count">0</strong><span>Jalur tersimpan</span></p>
           </div>
         </section>
@@ -154,6 +155,12 @@
             <span>Peraturan</span>
             <select id="regulation-filter">
               <option value="all">Semua peraturan</option>
+            </select>
+          </label>
+          <label class="control-field">
+            <span>Topik Pembahasan</span>
+            <select id="topic-filter">
+              <option value="all">Semua topik</option>
             </select>
           </label>
           <label class="control-field search-field">
