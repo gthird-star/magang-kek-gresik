@@ -1,0 +1,4 @@
+.impeccable/
+__pycache__/
+*.py[cod]
+scratch/

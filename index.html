@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#104f5a">
+  <meta name="description" content="Website belajar peraturan KEK Gresik dari dokumen sumber resmi.">
+  <title>Belajar Peraturan KEK Gresik</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="stylesheet" href="styles.css?v=12">
+  <script src="app.js?v=8" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#daftar-regulasi">Langsung ke materi</a>
+  <div class="app-shell">
+    <aside class="site-sidebar" aria-label="Navigasi aplikasi">
+      <a class="brand" href="#jalur-belajar" aria-label="Beranda Belajar KEK Gresik">
+        <span class="brand-index" aria-hidden="true">01</span>
+        <span>BUKU BELAJAR<strong>KEK GRESIK</strong></span>
+      </a>
+      <nav class="side-nav" aria-label="Navigasi utama">
+        <a class="view-link" href="#jalur-belajar" data-view-link="jalur-belajar" aria-current="page">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 5.5v16M8 7h8M8 11h8"/></svg>
+          <span>Jalur Belajar</span>
+        </a>
+        <a class="view-link" href="#progres-saya" data-view-link="progres-saya">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V10h4v9zM10 19V5h4v14zM16 19v-7h4v7z"/></svg>
+          <span>Progres Saya</span>
+        </a>
+        <a class="view-link" href="#daftar-regulasi" data-view-link="daftar-regulasi">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8l4 4V21H6z"/><path d="M14 3.5V8h4M9 12h6M9 16h6"/></svg>
+          <span>Daftar Regulasi</span>
+        </a>
+        <a class="view-link" href="#tentang-sumber" data-view-link="tentang-sumber">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+          <span>Tentang Sumber</span>
+        </a>
+      </nav>
+      <p class="sidebar-note">Materi belajar dari dokumen sumber resmi.</p>
+    </aside>
+
+    <main class="main-content" id="main">
+      <p class="status-message" id="app-status" role="status" aria-live="polite"></p>
+
+      <section class="view-panel" id="jalur-belajar" aria-labelledby="home-title">
+        <div class="page-hero">
+          <div class="hero-copy">
+            <h1 id="home-title">Pahami aturan KEK Gresik, selangkah demi selangkah.</h1>
+            <p>Mulai dari gambaran umum semua pasal. Setelah itu, pilih jalur pendalaman yang sesuai dengan divisi kamu.</p>
+            <div class="hero-actions">
+              <a class="button button-light" href="#daftar-regulasi" id="start-overview">Mulai dari gambaran umum</a>
+              <a class="hero-secondary-link" href="#progres-saya">Lihat progres belajar</a>
+            </div>
+            <div class="home-progress" aria-label="Ringkasan progres belajar">
+              <div>
+                <span>PROGRES BELAJAR</span>
+                <strong id="home-progress-label">Memuat progres...</strong>
+              </div>
+              <progress id="home-progress-bar" value="0" max="1">0%</progress>
+              <p id="home-progress-detail">Progres tersimpan di browser ini.</p>
+            </div>
+          </div>
+          <div class="hero-art">
+            <img src="assets/belajar1.png" width="1600" height="893" alt="Peserta magang belajar bersama menggunakan laptop dan buku" fetchpriority="high" decoding="async">
+          </div>
+        </div>
+
+        <section class="path-section" aria-labelledby="path-title">
+          <div class="section-heading">
+            <div>
+              <h2 id="path-title">Pilih jalur belajar</h2>
+              <p>Gambaran umum tetap mencakup seluruh pasal; jalur lain membantu memilih materi pendalaman.</p>
+            </div>
+          </div>
+          <div class="path-grid" id="track-cards" aria-live="polite"></div>
+          <div class="path-controls">
+            <label class="control-field">
+              <span>Jalur aktif</span>
+              <select id="track-filter">
+                <option value="all">Gambaran umum</option>
+                <option value="waspal">Waspal · draf</option>
+              </select>
+            </label>
+            <button class="button button-outline" id="build-track-toggle" type="button" aria-expanded="false" aria-controls="track-builder">Buat jalur divisi</button>
+            <p class="route-note" id="route-note"></p>
+          </div>
+        </section>
+
+        <section class="track-builder" id="track-builder" hidden aria-labelledby="track-builder-title">
+          <div class="builder-heading">
+            <div>
+              <h2 id="track-builder-title">Susun pasal untuk divisi kamu.</h2>
+            </div>
+            <button class="text-button" id="build-track-close" type="button">Tutup</button>
+          </div>
+          <form id="track-form">
+            <div class="builder-controls">
+              <label class="control-field">
+                <span>Nama jalur</span>
+                <input id="track-name" name="trackName" maxlength="50" required placeholder="Misalnya: Divisi operasional">
+              </label>
+              <label class="control-field">
+                <span>Cari untuk dipilih</span>
+                <input id="track-search" type="search" placeholder="Cari pasal, bab, atau kata kunci">
+              </label>
+            </div>
+            <p class="builder-help">Pilih pasal yang ingin dipelajari. Jalur yang dibuat hanya tersimpan di perangkat ini.</p>
+            <div class="track-options" id="track-options" tabindex="-1" aria-label="Daftar pasal untuk jalur divisi"></div>
+            <div class="builder-footer">
+              <span id="track-selection-count">Belum ada pasal dipilih.</span>
+              <button class="button button-primary" type="submit">Simpan jalur</button>
+            </div>
+          </form>
+        </section>
+      </section>
+
+      <section class="view-panel" id="progres-saya" aria-labelledby="progress-title" hidden>
+        <header class="page-heading">
+          <h1 id="progress-title">Progres belajar saya</h1>
+          <p>Ringkasan pasal yang sudah ditandai selesai dan bacaan terakhir di perangkat ini.</p>
+        </header>
+        <section class="progress-panel" id="progress-summary" aria-label="Ringkasan progres">
+          <div class="progress-heading">
+            <span>PROGRES BELAJAR</span>
+            <strong id="progress-label">Memuat pasal...</strong>
+          </div>
+          <progress id="progress-bar" value="0" max="1">0%</progress>
+          <p id="progress-detail">Progres tersimpan di browser ini.</p>
+          <div class="progress-facts">
+            <p><strong id="progress-read-count">0</strong><span>Pasal selesai</span></p>
+            <p><strong id="progress-checked-count">0</strong><span>Latihan dicek</span></p>
+            <p><strong id="progress-quiz-count">0</strong><span>Kuis dijawab</span></p>
+            <p><strong id="progress-track-count">0</strong><span>Jalur tersimpan</span></p>
+          </div>
+        </section>
+        <div class="progress-columns">
+          <section aria-labelledby="last-read-title">
+            <h2 id="last-read-title">Lanjutkan belajar</h2>
+            <div id="last-read" class="progress-entry"></div>
+          </section>
+          <section aria-labelledby="completed-title">
+            <h2 id="completed-title">Pasal yang ditandai selesai</h2>
+            <div id="completed-articles" class="completed-list"></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="view-panel" id="daftar-regulasi" aria-labelledby="regulations-title" hidden>
+        <header class="page-heading">
+          <h1 id="regulations-title">Daftar Regulasi &amp; Pasal</h1>
+          <p>Pilih peraturan atau cari topik untuk membaca bunyi pasal dan memeriksa halaman PDF sumber.</p>
+        </header>
+        <section class="control-strip" id="article-controls" aria-label="Cari dan pilih materi">
+          <label class="control-field">
+            <span>Peraturan</span>
+            <select id="regulation-filter">
+              <option value="all">Semua peraturan</option>
+            </select>
+          </label>
+          <label class="control-field">
+            <span>Topik Pembahasan</span>
+            <select id="topic-filter">
+              <option value="all">Semua topik</option>
+            </select>
+          </label>
+          <label class="control-field search-field">
+            <span>Cari pasal atau topik</span>
+            <input id="article-search" type="search" placeholder="Contoh: pengawasan, Pasal 59" autocomplete="off">
+          </label>
+        </section>
+        <div class="workspace">
+          <aside class="step-index" aria-label="Daftar isi pasal">
+            <details id="index-details" open>
+              <summary>DAFTAR LANGKAH <span id="visible-count"></span></summary>
+              <div class="index-content">
+                <p class="index-note">Pilih peraturan, bab, atau pasal untuk mulai membaca.</p>
+                <div class="article-list" id="article-list"></div>
+              </div>
+            </details>
+          </aside>
+          <section class="reader" id="reader" tabindex="-1" aria-label="Materi belajar">
+            <div class="reader-empty">
+              <h2>Menyiapkan daftar pasal.</h2>
+              <p>Dokumen asli tetap tersedia dari setiap materi.</p>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="view-panel" id="tentang-sumber" aria-labelledby="source-title" hidden>
+        <header class="page-heading source-heading">
+          <h1 id="source-title">Keterbukaan sumber &amp; penggunaan</h1>
+          <p>PDF asli adalah rujukan utama. Teks di website diekstrak dari dokumen resmi untuk membantu proses belajar.</p>
+        </header>
+        <section class="source-section" aria-labelledby="source-list-title">
+          <div class="section-heading">
+            <div>
+              <h2 id="source-list-title">Dokumen sumber resmi</h2>
+              <p>Buka dokumen asli untuk memeriksa redaksi, penomoran, dan konteks setiap pasal.</p>
+            </div>
+          </div>
+          <div class="source-grid" id="source-list"></div>
+        </section>
+        <footer class="site-footer" id="source-notice">
+          <h2>Catatan penggunaan materi</h2>
+          <p>Teks di website diekstrak dari PDF dan dapat mengandung kesalahan ekstraksi. Cocokkan dengan dokumen sumber jika ada redaksi atau penomoran yang janggal. Materi ini untuk belajar, bukan nasihat hukum.</p>
+        </footer>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
